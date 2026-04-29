@@ -163,6 +163,21 @@ const specialExpenseEvents: GameEvent[] = [
   { id: 'se13', title: '被电信诈骗', description: '你接到电话说你涉嫌洗钱，需要把资金转到"安全账户"。你照做了，然后发现这是诈骗电话', icon: '📞', type: 'risk', guaranteed: false, options: [{ text: '报警', percentMin: -30, percentMax: -15, probability: 0.5, description: '警察说会尽力追查，但钱已经被转走了', moralValue: 5 }, { text: '自认倒霉', percentMin: -55, percentMax: -40, probability: 0.5, description: '你发誓再也不接陌生电话了', moralValue: -10 }] },
   { id: 'se14', title: '买养生保健品', description: '你参加了个"健康讲座"，讲师说这个保健品包治百病。你买了一堆，回家一查：就是普通食品', icon: '💊', type: 'risk', guaranteed: false, options: [{ text: '退货', percentMin: -60, percentMax: -40, probability: 0.3, description: '店已经关门了', moralValue: -5 }, { text: '自己吃', percentMin: -30, percentMax: -20, probability: 0.7, description: '你吃了半年也没见有什么效果', moralValue: -10 }] },
   { id: 'se15', title: '装修被坑', description: '你找了家装修公司，合同写着"一口价"。装修到一半，工头说：这里要加钱，那里也要加钱，不加钱就停工', icon: '🔨', type: 'risk', guaranteed: false, options: [{ text: '妥协', percentMin: -60, percentMax: -40, probability: 0.6, description: '你花了两倍的预算', moralValue: -10 }, { text: '换人', percentMin: -55, percentMax: -35, probability: 0.4, description: '你重新找人装修，但之前付的钱要不回来了', moralValue: -5 }] },
+  { id: 'se16', title: '网红餐厅打卡', description: '你刷到一个网红餐厅，说是本地必吃。排了三小时队，终于轮到你了，结果菜上来：你怀疑这是不是生的', icon: '🍽️', type: 'risk', guaranteed: false, options: [{ text: '硬吃', percentMin: -55, percentMax: -40, probability: 0.5, description: '你拉了三天肚子', moralValue: -5 }, { text: '退款', percentMin: -50, percentMax: -35, probability: 0.5, description: '老板说：网红店不接受差评，你气不过发了小红书被粉丝围攻', moralValue: -10 }] },
+  { id: 'se17', title: '健身房跑路', description: '你办了两年的健身卡，结果三个月后健身房就跑路了。老板在朋友圈发：换个城市重新开始~', icon: '💪', type: 'risk', guaranteed: false, options: [{ text: '维权', percentMin: -50, percentMax: -40, probability: 0.3, description: '你找了律师，律师费比健身卡还贵', moralValue: 5 }, { text: '认了', percentMin: -60, percentMax: -50, probability: 0.7, description: '你发誓再也不办卡了', moralValue: -5 }] },
+  { id: 'se18', title: '海外代购翻车', description: '朋友说能帮你代购免税商品，你付了全款。结果等了一个月，朋友说：过关被扣了，要交关税', icon: '🛫', type: 'risk', guaranteed: false, options: [{ text: '付关税', percentMin: -60, percentMax: -45, probability: 0.6, description: '算下来比国内买还贵', moralValue: -5 }, { text: '不要了', percentMin: -50, percentMax: -40, probability: 0.4, description: '朋友不退钱，说已经帮你买了', moralValue: -10 }] },
+  { id: 'se19', title: '微商面膜代理', description: '表姐说卖面膜可赚钱了，让你做代理。你囤了一堆货，结果根本卖不出去', icon: '💄', type: 'risk', guaranteed: false, options: [{ text: '自己用', percentMin: -50, percentMax: -40, probability: 0.5, description: '你用了一辈子都用不完', moralValue: -5 }, { text: '送人', percentMin: -55, percentMax: -45, probability: 0.5, description: '送出去的都被说质量太差', moralValue: -10 }] },
+  { id: 'se20', title: '学车被坑', description: '你报了驾校，结果教练说：约考要加钱，不加钱约不到。科二你挂了五次，每次补考都要交钱', icon: '🚗', type: 'risk', guaranteed: false, options: [{ text: '继续考', percentMin: -60, percentMax: -50, probability: 0.6, description: '你终于拿到了驾照，但花了三倍的钱', moralValue: -5 }, { text: '换驾校', percentMin: -55, percentMax: -40, probability: 0.4, description: '上一个驾校不退钱，你又重新报了一个', moralValue: -10 }] },
+  { id: 'se21', title: '宠物看病', description: '你养的猫生病了，去宠物医院看病。检查费比人看病还贵，医生说：先做个全身检查吧', icon: '🐱', type: 'risk', guaranteed: false, options: [{ text: '检查', percentMin: -55, percentMax: -45, probability: 0.5, description: '检查结果：猫没病，就是不想动', moralValue: -5 }, { text: '放弃治疗', percentMin: -50, percentMax: -35, probability: 0.5, description: '你把猫带回家，第二天它自己好了', moralValue: -10 }] },
+  { id: 'se22', title: '相亲饭局', description: '同事给你介绍相亲对象，约在人均500的餐厅。你精心打扮赴约，结果对方带了五个人一起来蹭饭', icon: '💑', type: 'risk', guaranteed: false, options: [{ text: '请客', percentMin: -60, percentMax: -50, probability: 0.4, description: '你请了所有人的单，相亲对象说：你人不错，但我们不合适', moralValue: -10 }, { text: 'AA', percentMin: -55, percentMax: -40, probability: 0.6, description: '对方说你小气，然后走了', moralValue: -5 }] },
+  { id: 'se23', title: '手机碎屏险', description: '你买了碎屏险，结果手机真摔坏了。理赔时保险公司说：你的屏幕不是原装屏，不在保障范围内', icon: '📱', type: 'risk', guaranteed: false, options: [{ text: '自费修', percentMin: -55, percentMax: -45, probability: 0.7, description: '你花了比买保险多三倍的钱', moralValue: -5 }, { text: '投诉', percentMin: -50, percentMax: -35, probability: 0.3, description: '投诉被驳回，你被保险公司拉黑了', moralValue: -10 }] },
+  { id: 'se24', title: '超前消费分期', description: '你看到最新款手机，办了分期付款。每月还款不多，但算下来比原价贵了50%', icon: '💳', type: 'risk', guaranteed: false, options: [{ text: '提前还', percentMin: -55, percentMax: -45, probability: 0.4, description: '提前还款要收手续费，算下来还是亏了', moralValue: -5 }, { text: '慢慢还', percentMin: -60, percentMax: -50, probability: 0.6, description: '你还了半年还在还，利息越滚越多', moralValue: -10 }] },
+  { id: 'se25', title: '旅游团强制消费', description: '你报了低价旅行团，结果导游说：398只是车费，景点门票、餐费、住宿都要另付', icon: '✈️', type: 'risk', guaranteed: false, options: [{ text: '补交', percentMin: -60, percentMax: -50, probability: 0.6, description: '算下来比自由行还贵', moralValue: -10 }, { text: '中途退出', percentMin: -55, percentMax: -45, probability: 0.4, description: '你提前回来，团费不退', moralValue: -5 }] },
+  { id: 'se26', title: '兴趣班退费难', description: '你给孩子报了钢琴班，交了一年的学费。学了三个月，孩子说不想学了', icon: '🎹', type: 'risk', guaranteed: false, options: [{ text: '说服孩子', percentMin: -55, percentMax: -45, probability: 0.3, description: '孩子哭了一个月，你心软了，钱也打水漂了', moralValue: -5 }, { text: '退费', percentMin: -50, percentMax: -35, probability: 0.7, description: '机构说：退费要扣50%违约金', moralValue: -10 }] },
+  { id: 'se27', title: '会员卡充值', description: '你办了张理发店会员卡，充值5000送2000。结果第二次去，卡里的钱还没用完，店就倒闭了', icon: '💇', type: 'risk', guaranteed: false, options: [{ text: '维权', percentMin: -55, percentMax: -45, probability: 0.2, description: '你找了消费者协会，但店已经跑路了', moralValue: 5 }, { text: '认了', percentMin: -60, percentMax: -50, probability: 0.8, description: '你发誓再也不办会员卡了', moralValue: -10 }] },
+  { id: 'se28', title: '游戏充值冲动', description: '你打游戏时看到限时打折，心一热充了648。结果第二天活动就结束了，你后悔不已', icon: '🎮', type: 'risk', guaranteed: false, options: [{ text: '认了', percentMin: -55, percentMax: -45, probability: 0.6, description: '你发誓再也不冲了（假的）', moralValue: -10 }, { text: '要求退款', percentMin: -50, percentMax: -35, probability: 0.4, description: '客服说：充值成功无法退款', moralValue: -5 }] },
+  { id: 'se29', title: '二手平台被骗', description: '你在二手平台买了部手机，收到后发现是模型机。卖家已经把你拉黑了', icon: '📦', type: 'risk', guaranteed: false, options: [{ text: '报警', percentMin: -55, percentMax: -45, probability: 0.3, description: '金额太小，警察说很难追查', moralValue: 5 }, { text: '算了', percentMin: -60, percentMax: -50, probability: 0.7, description: '你只能吃哑巴亏', moralValue: -10 }] },
+  { id: 'se30', title: '医美贷款', description: '你做了个整形手术，医美顾问说可以分期付款，零利息。你贷了款，结果手术失败，脸歪了', icon: '💉', type: 'risk', guaranteed: false, options: [{ text: '修复', percentMin: -60, percentMax: -50, probability: 0.5, description: '修复费用是原手术的三倍', moralValue: -15 }, { text: '维权', percentMin: -55, percentMax: -40, probability: 0.5, description: '机构说你签了风险告知书，维权无门', moralValue: -10 }] },
 ];
 
 // ==================== 事件生成与获取 ====================
@@ -207,12 +222,12 @@ const generateEventVariants = (baseEvents: GameEvent[], times: number): GameEven
 // 生成大量事件 - 确保有10000条
 export const gameEvents: GameEvent[] = [
   ...allEvents,
-  ...generateEventVariants(funnyStoryEvents, 500),      // 30个故事 × 500变体
-  ...generateEventVariants(workIncomeEvents, 300),     // 9个 × 300
-  ...generateEventVariants(dailyConsumptionEvents, 300), // 9个 × 300
-  ...generateEventVariants(beingScammedEvents, 200),   // 8个 × 200
-  ...generateEventVariants(specialIncomeEvents, 150),  // 5个 × 150
-  ...generateEventVariants(specialExpenseEvents, 150),  // 8个 × 150
+  ...generateEventVariants(funnyStoryEvents, 800),      // 搞笑故事 30个 × 800变体
+  ...generateEventVariants(workIncomeEvents, 100),     // 工作收入 9个 × 100
+  ...generateEventVariants(dailyConsumptionEvents, 300), // 日常消费 9个 × 300
+  ...generateEventVariants(beingScammedEvents, 400),   // 被骗事件 8个 × 400
+  ...generateEventVariants(specialIncomeEvents, 50),  // 特殊收入 5个 × 50
+  ...generateEventVariants(specialExpenseEvents, 400),  // 特殊支出 30个 × 400
 ];
 
 // 根据道德值调整事件权重
@@ -225,16 +240,16 @@ export const getWeightedRandomEventByMoral = (moralValue: number = 0): GameEvent
   // 将道德值转换为权重调整因子 (-1 到 1)
   const moralFactor = Math.max(-1, Math.min(1, moralValue / 100));
   
-  // 计算各类事件的权重
-  const storyWeight = 0.3; // 搞笑故事事件保持不变
-  const goodEventWeight = 0.3 + (moralFactor * 0.15); // 好事件：道德值高时增加
-  const badEventWeight = 0.25 - (moralFactor * 0.1); // 坏事件：道德值低时增加
-  const specialGoodWeight = 0.1 + (moralFactor * 0.05); // 特殊好事件
+  // 计算各类事件的权重 - 调整比例让坏事件更容易触发
+  const storyWeight = 0.35; // 搞笑故事事件
+  const goodEventWeight = 0.2 + (moralFactor * 0.1); // 好事件：降低基础权重
+  const badEventWeight = 0.25 - (moralFactor * 0.05); // 坏事件：增加基础权重
+  const specialGoodWeight = 0.05 + (moralFactor * 0.03); // 特殊好事件：大幅降低
   
   const roll = Math.random();
   
   if (roll < storyWeight) {
-    // 30% 超级搞笑故事事件
+    // 35% 超级搞笑故事事件
     const storyEvents = gameEvents.filter(e => e.id.startsWith('s'));
     return storyEvents[Math.floor(Math.random() * storyEvents.length)];
   } else if (roll < storyWeight + goodEventWeight) {
