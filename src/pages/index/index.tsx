@@ -401,7 +401,7 @@ const EventCard = ({
               <View className="flex items-center justify-between mb-2">
                 <View className="flex items-center gap-2">
                   <Text className={`text-lg font-bold ${selectedOption.moneyChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    {selectedOption.moneyChange >= 0 ? '进账' : '支出'}
+                    {selectedOption.moneyChange >= 0 ? '进账 +' : '支出 -'}{Math.abs(selectedOption.moneyChange)}
                   </Text>
                   <View className="flex items-center gap-1">
                     <Heart size={14} color={selectedOption.option.moralValue >= 0 ? '#10b981' : '#ef4444'} />
