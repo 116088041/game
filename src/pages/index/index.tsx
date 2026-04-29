@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import Taro from '@tarojs/taro';
 import { 
   Trophy, Coins, MapPin, Calendar, TrendingUp, 
   TrendingDown, CircleAlert, Zap, Crown, Building,
@@ -14,6 +15,15 @@ import { getRandomEvent, type GameEvent, type GameEventOption } from '@/data/gam
 import { useGameStore, initializeUser, type RankingInfo } from '@/store/game-store';
 import { Network } from '@/network';
 import './index.css';
+
+// 跨端兼容：获取input事件的值
+const getInputValue = (e: any): string => {
+  if (Taro.getEnv() === Taro.ENV_TYPE.WEAPP || Taro.getEnv() === Taro.ENV_TYPE.TT) {
+    return e.detail.value;
+  }
+  // H5 环境
+  return e.target?.value || '';
+};
 
 // 获取地点类型的图标和颜色
 const getDistrictIcon = (type: District['type']) => {
@@ -95,7 +105,7 @@ const LocationSelector = ({
                 className="w-full bg-transparent text-base"
                 placeholder="输入你的昵称"
                 value={nickname}
-                onInput={(e: any) => setNickname(e.detail.value)}
+                onInput={(e: any) => setNickname(getInputValue(e))}
                 maxLength={10}
               />
             </View>
@@ -122,7 +132,7 @@ const LocationSelector = ({
                 className="w-full bg-transparent text-base"
                 placeholder="搜索省份..."
                 value={searchText}
-                onInput={(e: any) => setSearchText(e.detail.value)}
+                onInput={(e: any) => setSearchText(getInputValue(e))}
               />
             </View>
           </View>
@@ -171,7 +181,7 @@ const LocationSelector = ({
                 className="w-full bg-transparent text-base"
                 placeholder="搜索城市..."
                 value={searchText}
-                onInput={(e: any) => setSearchText(e.detail.value)}
+                onInput={(e: any) => setSearchText(getInputValue(e))}
               />
             </View>
           </View>
