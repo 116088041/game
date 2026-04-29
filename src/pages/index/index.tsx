@@ -2,7 +2,7 @@ import { View, Text, ScrollView, Video } from '@tarojs/components';
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Dialog } from '@/components/ui/dialog';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import Taro from '@tarojs/taro';
 import { 
@@ -637,52 +637,46 @@ const IndexPage = () => {
         />
       </Dialog>
 
-      {/* 事件弹窗 - 手动关闭 */}
-      <Dialog open={showEventDialog} onOpenChange={setShowEventDialog}>
-        <View className="p-4">
+      {/* 事件弹窗 - 点击外部关闭 */}
+      <Dialog open={showEventDialog} onOpenChange={(open) => {
+        if (!open && user && currentEventResult) {
+          // 关闭弹窗时执行结算逻辑
+          const { option, moneyChange } = currentEventResult;
+          const newBalance = user.balance + moneyChange;
+          updateBalance(moneyChange, currentEvent?.title || '', option.description, currentLocation?.name);
+          setLastChange(moneyChange);
+          
+          // 同步到后端
+          Network.request({
+            url: '/api/game/record',
+            method: 'POST',
+            data: {
+              userId: user.id,
+              day: user.day,
+              eventTitle: currentEvent?.title || '',
+              eventResult: option.description,
+              moneyChange,
+              balance: newBalance,
+              locationName: currentLocation?.name || user.location.city,
+            }
+          });
+          setCurrentEvent(null);
+          setCurrentEventResult(null);
+        }
+        setShowEventDialog(open);
+      }}
+      >
+        <DialogContent className="max-h-[80vh] overflow-y-auto">
           {currentEvent && (
-            <EventCard 
-              event={currentEvent} 
+            <EventCard
+              event={currentEvent}
               locationName={currentLocation?.name || user.location.city}
               onResultCalculated={(option, moneyChange) => {
                 setCurrentEventResult({ option, moneyChange });
               }}
             />
           )}
-          {/* 关闭按钮 */}
-          <Button 
-            className="w-full mt-4 bg-amber-500 hover:bg-amber-600 text-white"
-            onClick={() => {
-              // 执行事件结算逻辑
-              if (user && currentEventResult) {
-                const { option, moneyChange } = currentEventResult;
-                const newBalance = user.balance + moneyChange;
-                updateBalance(moneyChange, currentEvent.title, option.description, currentLocation?.name);
-                setLastChange(moneyChange);
-                
-                // 同步到后端
-                Network.request({
-                  url: '/api/game/record',
-                  method: 'POST',
-                  data: {
-                    userId: user.id,
-                    day: user.day,
-                    eventTitle: currentEvent.title,
-                    eventResult: option.description,
-                    moneyChange,
-                    balance: newBalance,
-                    locationName: currentLocation?.name || user.location.city,
-                  }
-                });
-              }
-              setShowEventDialog(false);
-              setCurrentEvent(null);
-              setCurrentEventResult(null);
-            }}
-          >
-            <Text>关闭</Text>
-          </Button>
-        </View>
+        </DialogContent>
       </Dialog>
 
     </View>
