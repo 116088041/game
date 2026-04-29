@@ -646,7 +646,7 @@ const IndexPage = () => {
       {/* 事件弹窗 - 自动关闭 */}
       <Dialog open={showEventDialog} onOpenChange={setShowEventDialog}>
         <View className="p-4">
-          {currentEvent && currentEventResult && (
+          {currentEvent && (
             <EventCard 
               event={currentEvent} 
               locationName={currentLocation?.name || user.location.city}
