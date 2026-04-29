@@ -641,7 +641,7 @@ const IndexPage = () => {
         {Taro.getEnv() === Taro.ENV_TYPE.WEAPP || Taro.getEnv() === Taro.ENV_TYPE.TT ? (
           <Video
             className="w-full h-full"
-            src="https://coze-coding-project.tos.coze.site/coze_storage_7634003127947231295/video/video_generate_cgt-20260429154029-j9942.mp4"
+            src="https://coze-coding-project.tos.coze.site/coze_storage_7634003127947231295/video/video_generate_cgt-20260429154618-b8cq7.mp4?sign=1808984826-c9028a0e60-0-9ffa71eaaa570badf193c75d79802d44f0866cc45c98d8e69195442b4aed7baa"
             controls={false}
             autoplay={false}
             loop
