@@ -8,8 +8,8 @@ export class VideoController {
     const config = new Config();
     const client = new VideoGenerationClient(config);
 
-    // 街溜子行走的视频提示词
-    const prompt = `A young Chinese man walking casually down a bustling city street, wearing casual clothes like a hoodie and loose pants, hands in pockets, swaggering leisurely, looking around casually. Both sides of the street are lined with shops, restaurants, and modern buildings with Chinese characteristics. Street lights, trees along the sidewalk, other pedestrians in the background. The man walks confidently from left to right across the camera view. Daytime urban street scene, realistic style, cinematic camera follows the walking man, natural movement, relaxed atmosphere.`;
+    // 一个人走在大街上，周围有建筑和树木
+    const prompt = `A solitary person walking leisurely along a peaceful urban street lined with tall buildings on both sides, with green trees and bushes planted along the sidewalk. The street has modern architecture mixed with traditional Chinese-style shops. Trees casting gentle shadows on the ground. The person is walking casually, enjoying the urban scenery. Warm afternoon sunlight, realistic style, cinematic camera at eye level following the walker, peaceful and relaxing atmosphere.`;
 
     try {
       const response = await client.videoGeneration(

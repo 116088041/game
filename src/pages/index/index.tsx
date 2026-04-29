@@ -300,7 +300,7 @@ const MoneyDisplay = ({ balance, change }: { balance: number; change?: number })
     <Text className="text-2xl font-bold text-amber-600">
       ¥{balance.toFixed(2)}
     </Text>
-    {change !== undefined && change !== 0 && (
+    {typeof change === 'number' && change !== 0 && (
       <View className={`flex items-center gap-1 px-2 py-1 rounded-full ${change > 0 ? 'bg-green-100' : 'bg-red-100'}`}>
         {change > 0 ? <TrendingUp size={14} color="#16a34a" /> : <TrendingDown size={14} color="#dc2626" />}
         <Text className={`text-sm font-medium ${change > 0 ? 'text-green-600' : 'text-red-600'}`}>
@@ -641,7 +641,7 @@ const IndexPage = () => {
         {Taro.getEnv() === Taro.ENV_TYPE.WEAPP || Taro.getEnv() === Taro.ENV_TYPE.TT ? (
           <Video
             className="w-full h-full"
-            src="https://coze-coding-project.tos.coze.site/coze_storage_7634003127947231295/video/video_generate_cgt-20260429114640-zb8m6.mp4"
+            src="https://coze-coding-project.tos.coze.site/coze_storage_7634003127947231295/video/video_generate_cgt-20260429154029-j9942.mp4"
             controls={false}
             autoplay={false}
             loop
@@ -654,12 +654,12 @@ const IndexPage = () => {
           <View className="w-full h-full flex items-center justify-center bg-gradient-to-b from-sky-300 to-sky-200">
             <View className="text-center">
               <View className="text-6xl mb-2">🚶</View>
-              <Text className="block text-sky-600 text-sm">街溜子街头漫步</Text>
+              <Text className="block text-sky-600 text-sm">街头漫步</Text>
             </View>
           </View>
         )}
         <View className="absolute bottom-2 left-2 bg-black bg-opacity-50 rounded px-2 py-1">
-          <Text className="text-white text-xs">街溜子街头漫步</Text>
+          <Text className="text-white text-xs">街头漫步</Text>
         </View>
       </View>
 
@@ -681,8 +681,8 @@ const IndexPage = () => {
           {/* 道德值显示 */}
           <View className="flex items-center gap-2 bg-white bg-opacity-20 rounded-full px-3 py-1">
             <Heart size={14} color={user.moralValue >= 0 ? '#ffffff' : '#ff6b6b'} />
-            <Text className="text-white text-sm">
-              {user.moralValue >= 0 ? '+' : ''}{user.moralValue}
+            <Text className="text-white text-sm font-medium">
+              {typeof user.moralValue === 'number' ? (user.moralValue >= 0 ? '+' : '') + user.moralValue : '+50'}
             </Text>
           </View>
         </View>
