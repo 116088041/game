@@ -8,7 +8,7 @@ import Taro from '@tarojs/taro';
 import { 
   Coins, MapPin, Calendar, TrendingUp, 
   TrendingDown, CircleAlert, Zap, Crown, Building,
-  RefreshCw, User, Clock, Map, Navigation, Store
+  RefreshCw, User, Map, Navigation, Store
 } from 'lucide-react-taro';
 import { chinaProvinces, type Province, type City, type District } from '@/data/china-cities';
 import { getWeightedRandomEvent, getRandomOption, type GameEvent } from '@/data/game-events';
@@ -512,12 +512,6 @@ const IndexPage = () => {
     return city?.districts || [];
   };
 
-  // 点击随机事件按钮 - 先选择地点
-  const handleGetEvent = () => {
-    setCurrentLocation(null);
-    setShowLocationPicker(true);
-  };
-
   // 选择地点后触发事件
   const handleSelectLocation = (district: District) => {
     setCurrentLocation(district);
@@ -528,15 +522,6 @@ const IndexPage = () => {
     setCurrentEvent(event);
     setShowEventDialog(true);
     setGameStatus('EVENT');
-  };
-  
-  // 下一天
-  const handleNextDay = () => {
-    if (user) {
-      useGameStore.getState().syncUserData({ day: user.day + 1 });
-    }
-    setLastChange(undefined);
-    setCurrentLocation(null);
   };
   
   // 获取排名信息
@@ -697,53 +682,8 @@ const IndexPage = () => {
         )}
       </View>
 
-      {/* 主操作区 */}
+      {/* 主操作区 - 简洁版 */}
       <View className="p-4">
-        {/* 主操作按钮 */}
-        <View className="mb-4">
-          <Button 
-            className="w-full h-20 bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow-lg"
-            onClick={handleGetEvent}
-          >
-            <View className="flex flex-col items-center">
-              <Zap size={28} color="#ffffff" className="mb-1" />
-              <Text className="text-base font-bold">出门探索</Text>
-              <Text className="text-xs opacity-80">选择地点</Text>
-            </View>
-          </Button>
-        </View>
-
-        {/* 快速操作 */}
-        <View className="flex gap-3 mb-4">
-          <Button 
-            variant="outline"
-            className="flex-1 h-14"
-            onClick={handleNextDay}
-          >
-            <View className="flex items-center gap-2">
-              <Clock size={18} color="#6b7280" />
-              <Text className="text-sm text-gray-600">下一天</Text>
-            </View>
-          </Button>
-        </View>
-
-        {/* 当前城市可探索地点提示 */}
-        <Card className="bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200 mb-4">
-          <CardContent className="p-4">
-            <View className="flex items-start gap-3">
-              <View className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
-                <Map size={20} color="#f59e0b" />
-              </View>
-              <View className="flex-1">
-                <Text className="block text-sm font-bold text-gray-800 mb-1">{user.location.city}可探索地点</Text>
-                <Text className="block text-xs text-gray-600 leading-relaxed">
-                  共有 {getCurrentDistricts().length} 个可探索地点：商圈 {getCurrentDistricts().filter(d => d.type === 'business').length} 个、街区 {getCurrentDistricts().filter(d => d.type === 'street').length} 个、景点 {getCurrentDistricts().filter(d => d.type === 'scenic').length} 个、区县 {getCurrentDistricts().filter(d => d.type === 'district').length} 个
-                </Text>
-              </View>
-            </View>
-          </CardContent>
-        </Card>
-
         {/* 每日结算时间 */}
         <View className="mt-4 text-center">
           <Text className="text-xs text-gray-400">
