@@ -14,10 +14,11 @@ export interface Location {
 
 // 每日记录
 export interface DailyRecord {
-  day: number;
   date: string;
   moneyChange: number;
   balance: number;
+  moralChange: number; // 道德值变化
+  moralValue: number;  // 当天道德值
   eventTitle: string;
   eventResult: string;
   locationName?: string;
@@ -30,7 +31,7 @@ export interface UserData {
   location: Location;
   balance: number;
   totalBalance: number;
-  day: number;
+  moralValue: number; // 道德值：-100 到 100
   startDate: string;
   dailyRecords: DailyRecord[];
 }
@@ -67,8 +68,8 @@ interface GameState {
   message: string | null;
   
   // 动作
-  setUser: (user: UserData) => void;
-  updateBalance: (change: number, eventTitle: string, eventResult: string, locationName?: string) => void;
+  setUser: (user: UserData | null) => void;
+  updateBalance: (change: number, moralChange: number, eventTitle: string, eventResult: string, locationName?: string) => void;
   setGameStatus: (status: GameStatus) => void;
   setCurrentEvent: (event: any | null) => void;
   setRanking: (ranking: RankingInfo | null) => void;
@@ -94,7 +95,7 @@ const createInitialUser = (nickname: string, location: Location): UserData => {
     location,
     balance: 100,
     totalBalance: 100,
-    day: 1,
+    moralValue: 0, // 初始道德值为0
     startDate: now.toISOString().split('T')[0],
     dailyRecords: []
   };
@@ -112,18 +113,20 @@ export const useGameStore = create<GameState>()(
       
       setUser: (user) => set({ user }),
       
-      updateBalance: (change, eventTitle, eventResult, locationName) => {
+      updateBalance: (change, moralChange, eventTitle, eventResult, locationName) => {
         const { user } = get();
         if (!user) return;
         
         const newBalance = user.balance + change;
+        const newMoralValue = Math.max(-100, Math.min(100, user.moralValue + moralChange));
         const today = new Date().toISOString().split('T')[0];
         
         const dailyRecord: DailyRecord = {
-          day: user.day,
           date: today,
           moneyChange: change,
           balance: newBalance,
+          moralChange,
+          moralValue: newMoralValue,
           eventTitle,
           eventResult,
           locationName
@@ -134,6 +137,7 @@ export const useGameStore = create<GameState>()(
             ...user,
             balance: newBalance,
             totalBalance: user.totalBalance + Math.abs(change),
+            moralValue: newMoralValue,
             dailyRecords: [...user.dailyRecords, dailyRecord]
           },
           gameStatus: newBalance <= 0 ? 'GAME_OVER' : 'PLAYING'

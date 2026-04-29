@@ -6,12 +6,12 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import Taro from '@tarojs/taro';
 import { 
-  Coins, MapPin, Calendar, TrendingUp, 
+  Coins, MapPin, TrendingUp, 
   TrendingDown, CircleAlert, Zap, Building,
-  RefreshCw, User, Map, Navigation, Store
+  RefreshCw, User, Map, Navigation, Store, Heart
 } from 'lucide-react-taro';
 import { chinaProvinces, type Province, type City, type District } from '@/data/china-cities';
-import { getWeightedRandomEvent, type GameEvent, type GameEventOption } from '@/data/game-events';
+import { getWeightedRandomEventByMoral, type GameEvent, type GameEventOption } from '@/data/game-events';
 import { useGameStore, initializeUser, type RankingInfo } from '@/store/game-store';
 import { Network } from '@/network';
 import './index.css';
@@ -246,7 +246,7 @@ const LocationPicker = ({
         选择你要去的地方
       </Text>
       <Text className="block text-sm text-center text-gray-500 mb-4">
-        第{useGameStore.getState().user?.day || 1}天 - 选择一个地点触发事件
+        选择一个地点触发事件（已触发{useGameStore.getState().user?.dailyRecords?.length || 0}次）
       </Text>
 
       {/* 地点列表 */}
@@ -369,7 +369,7 @@ const EventCard = ({
           <Badge className={getTypeColor(event.type)}>
             <Text className="text-xs">{getTypeText(event.type)}</Text>
           </Badge>
-          <Text className="text-sm text-gray-400">第{useGameStore.getState().user?.day || 1}天</Text>
+          <Text className="text-sm text-gray-400">第{useGameStore.getState().user?.dailyRecords?.length || 0}次</Text>
         </View>
 
         {/* 地点信息 */}
@@ -453,8 +453,9 @@ const IndexPage = () => {
     setShowLocationPicker(false);
     setCurrentEventResult(null); // 重置结果
     
-    // 根据地点类型获取随机事件
-    const event = getWeightedRandomEvent();
+    // 根据道德值获取随机事件
+    const moralValue = user?.moralValue || 0;
+    const event = getWeightedRandomEventByMoral(moralValue);
     setCurrentEvent(event);
     
     // 立即显示事件弹窗，让用户选择
@@ -546,7 +547,7 @@ const IndexPage = () => {
         <Card className="w-full mb-6">
           <CardContent className="p-4 text-center">
             <Text className="block text-sm text-gray-500 mb-2">坚持了</Text>
-            <Text className="block text-4xl font-bold text-amber-500">{user.day}天</Text>
+            <Text className="block text-4xl font-bold text-amber-500">{user.dailyRecords.length}次</Text>
             <Text className="block text-sm text-gray-500 mt-2">累计收入/支出</Text>
             <Text className="block text-2xl font-bold text-gray-800">¥{user.totalBalance.toFixed(2)}</Text>
           </CardContent>
@@ -599,9 +600,12 @@ const IndexPage = () => {
               </View>
             </View>
           </View>
+          {/* 道德值显示 */}
           <View className="flex items-center gap-2 bg-white bg-opacity-20 rounded-full px-3 py-1">
-            <Calendar size={14} color="#ffffff" />
-            <Text className="text-white text-sm">第{user.day}天</Text>
+            <Heart size={14} color={user.moralValue >= 0 ? '#ffffff' : '#ff6b6b'} />
+            <Text className="text-white text-sm">
+              {user.moralValue >= 0 ? '+' : ''}{user.moralValue}
+            </Text>
           </View>
         </View>
         
@@ -641,31 +645,12 @@ const IndexPage = () => {
 
       {/* 事件弹窗 - 用户选择后关闭 */}
       <Dialog open={showEventDialog} onOpenChange={(open) => {
-        if (!open && user && currentEventResult) {
-          // 关闭弹窗时执行结算逻辑
-          const { option, moneyChange } = currentEventResult;
-          const newBalance = user.balance + moneyChange;
-          updateBalance(moneyChange, currentEvent?.title || '', option.description, currentLocation?.name);
-          setLastChange(moneyChange);
-          
-          // 同步到后端
-          Network.request({
-            url: '/api/game/record',
-            method: 'POST',
-            data: {
-              userId: user.id,
-              day: user.day,
-              eventTitle: currentEvent?.title || '',
-              eventResult: option.description,
-              moneyChange,
-              balance: newBalance,
-              locationName: currentLocation?.name || user.location.city,
-            }
-          });
+        // 事件弹窗通过用户选择后自动关闭，这里只处理意外关闭（不应该发生）
+        if (!open) {
+          setShowEventDialog(false);
           setCurrentEvent(null);
           setCurrentEventResult(null);
         }
-        setShowEventDialog(open);
       }}
       >
         <DialogContent className="max-h-[80vh] overflow-y-auto">
@@ -681,7 +666,10 @@ const IndexPage = () => {
                 setTimeout(() => {
                   if (user) {
                     const newBalance = user.balance + moneyChange;
-                    updateBalance(moneyChange, currentEvent.title, option.description, currentLocation?.name);
+                    const moralChange = option.moralValue;
+                    
+                    // 更新余额和道德值
+                    updateBalance(moneyChange, moralChange, currentEvent.title, option.description, currentLocation?.name);
                     setLastChange(moneyChange);
                     
                     // 同步到后端
@@ -690,14 +678,33 @@ const IndexPage = () => {
                       method: 'POST',
                       data: {
                         userId: user.id,
-                        day: user.day,
                         eventTitle: currentEvent.title,
                         eventResult: option.description,
                         moneyChange,
+                        moralChange,
                         balance: newBalance,
+                        moralValue: user.moralValue + moralChange,
                         locationName: currentLocation?.name || user.location.city,
                       }
                     });
+                    
+                    // 检查余额是否为负数，是则重新开始
+                    if (newBalance <= 0) {
+                      setGameStatus('GAME_OVER');
+                      Taro.showModal({
+                        title: '破产了！',
+                        content: '你的钱花光了，游戏结束！是否重新开始？',
+                        confirmText: '重新开始',
+                        cancelText: '查看排名',
+                        success: (res) => {
+                          if (res.confirm) {
+                            // 重新开始
+                            useGameStore.getState().setUser(null);
+                            useGameStore.setState({ gameStatus: 'INIT' });
+                          }
+                        }
+                      });
+                    }
                   }
                   setShowEventDialog(false);
                   setCurrentEvent(null);

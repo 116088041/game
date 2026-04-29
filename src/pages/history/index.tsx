@@ -1,17 +1,18 @@
 import { View, Text, ScrollView } from '@tarojs/components';
 import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Calendar, TrendingUp, TrendingDown, MapPin, Clock, RefreshCw } from 'lucide-react-taro';
+import { Calendar, TrendingUp, TrendingDown, MapPin, Clock, RefreshCw, Heart } from 'lucide-react-taro';
 import { Network } from '@/network';
 import { useGameStore } from '@/store/game-store';
 import './index.css';
 
 interface HistoryRecord {
   id: string;
-  day: number;
   eventTitle: string;
   eventResult: string;
   moneyChange: number;
+  moralChange: number;
+  moralValue: number;
   balance: number;
   locationName: string;
   createdAt: string;
@@ -108,13 +109,13 @@ export default function History() {
     return `${date.getMonth() + 1}/${date.getDate()} ${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`;
   };
 
-  // 按天分组
+  // 按日期分组
   const groupedRecords = records.reduce((acc, record) => {
-    const day = record.day;
-    if (!acc[day]) acc[day] = [];
-    acc[day].push(record);
+    const date = record.createdAt?.split('T')[0] || '未知';
+    if (!acc[date]) acc[date] = [];
+    acc[date].push(record);
     return acc;
-  }, {} as Record<number, HistoryRecord[]>);
+  }, {} as Record<string, HistoryRecord[]>);
 
   return (
     <View className="min-h-screen bg-gradient-to-b from-amber-50 to-orange-50">
@@ -164,7 +165,12 @@ export default function History() {
                 </View>
               </View>
               <View className="mt-3 pt-3 border-t border-gray-100 flex justify-between text-sm text-gray-500">
-                <Text>游戏天数：{user.day}天</Text>
+                <View className="flex items-center gap-1">
+                  <Heart size={14} color={user.moralValue >= 0 ? '#10b981' : '#ef4444'} />
+                  <Text className={user.moralValue >= 0 ? 'text-green-600' : 'text-red-500'}>
+                    道德值：{user.moralValue >= 0 ? '+' : ''}{user.moralValue}
+                  </Text>
+                </View>
                 <Text>当前财富：¥{user.balance.toLocaleString()}</Text>
               </View>
             </CardContent>
@@ -185,13 +191,13 @@ export default function History() {
           </View>
         ) : (
           Object.entries(groupedRecords)
-            .sort((a, b) => Number(b[0]) - Number(a[0]))
-            .map(([day, dayRecords]) => (
-              <View key={day} className="mb-4">
-                {/* 天数标签 */}
+            .sort((a, b) => b[0].localeCompare(a[0]))
+            .map(([date, dayRecords]) => (
+              <View key={date} className="mb-4">
+                {/* 日期标签 */}
                 <View className="flex items-center gap-2 mb-2">
                   <Calendar size={14} color="#f59e0b" />
-                  <Text className="text-sm font-medium text-amber-700">第{day}天</Text>
+                  <Text className="text-sm font-medium text-amber-700">{date}</Text>
                   <View className="flex-1 h-px bg-amber-200"></View>
                 </View>
 
@@ -259,6 +265,14 @@ export default function History() {
                                     >
                                       金额变化: {record.moneyChange >= 0 ? '+' : ''}{record.moneyChange}元
                                     </Text>
+                                    {record.moralChange !== undefined && record.moralChange !== 0 && (
+                                      <View className="flex items-center gap-1 mt-1">
+                                        <Heart size={12} color={record.moralChange >= 0 ? '#10b981' : '#ef4444'} />
+                                        <Text className={`text-xs ${record.moralChange >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+                                          道德值: {record.moralChange >= 0 ? '+' : ''}{record.moralChange}
+                                        </Text>
+                                      </View>
+                                    )}
                                   </View>
                                 </View>
                               )}
