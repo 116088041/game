@@ -11,7 +11,7 @@ import {
   RefreshCw, User, Clock, Map, Navigation, Store
 } from 'lucide-react-taro';
 import { chinaProvinces, type Province, type City, type District } from '@/data/china-cities';
-import { getRandomEvent, type GameEvent, type GameEventOption } from '@/data/game-events';
+import { getWeightedRandomEvent, getRandomOption, type GameEvent } from '@/data/game-events';
 import { useGameStore, initializeUser, type RankingInfo } from '@/store/game-store';
 import { Network } from '@/network';
 import './index.css';
@@ -379,16 +379,35 @@ const RankingCard = ({
   </Card>
 );
 
-// 事件卡片组件
+// 事件卡片组件 - 系统自动选择结果展示
 const EventCard = ({ 
   event, 
   locationName,
-  onSelectOption 
+  onAutoSelect 
 }: { 
   event: GameEvent; 
   locationName: string;
-  onSelectOption: (option: GameEventOption) => void;
+  onAutoSelect: () => void;
 }) => {
+  const [selectedOption, setSelectedOption] = useState<{ text: string; description: string; moneyChange: number } | null>(null);
+  
+  // 系统自动选择（使用useEffect确保只在挂载时执行一次）
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const result = getRandomOption(event);
+      setSelectedOption({
+        text: result.option.text,
+        description: result.option.description,
+        moneyChange: result.moneyChange,
+      });
+      // 延迟触发回调，确保UI先渲染
+      setTimeout(() => {
+        onAutoSelect();
+      }, 500);
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [event, onAutoSelect]);
+  
   const getTypeColor = (type: string) => {
     switch (type) {
       case 'work': return 'bg-blue-100 text-blue-600';
@@ -448,22 +467,27 @@ const EventCard = ({
           </View>
         </View>
 
-        <View className="space-y-2">
-          {event.options.map((option, index) => (
-            <Button
-              key={index}
-              variant="outline"
-              className="w-full justify-start h-auto py-3 px-4 border-gray-200 hover:border-amber-400 hover:bg-amber-50"
-              onClick={() => onSelectOption(option)}
-            >
-              <View className="flex flex-col items-start">
-                <Text className="text-base text-gray-800">{option.text}</Text>
-                <Text className={`text-sm mt-1 ${option.moneyChange > 0 ? 'text-green-600' : option.moneyChange < 0 ? 'text-red-600' : 'text-gray-400'}`}>
-                  {option.moneyChange > 0 ? `+${option.moneyChange}元` : option.moneyChange < 0 ? `${option.moneyChange}元` : '无变化'}
+        {/* 系统自动选择结果 */}
+        <View className="mt-4 p-4 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl border border-amber-200">
+          {selectedOption ? (
+            <>
+              <View className="flex items-center gap-2 mb-2">
+                <Zap size={16} color="#f59e0b" />
+                <Text className="text-sm font-medium text-amber-700">系统自动选择</Text>
+              </View>
+              <Text className="block text-base text-gray-800 font-medium">{selectedOption.text}</Text>
+              <Text className="block text-sm text-gray-500 mt-1">{selectedOption.description}</Text>
+              <View className="mt-3 pt-3 border-t border-amber-200">
+                <Text className={`text-lg font-bold ${selectedOption.moneyChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {selectedOption.moneyChange >= 0 ? '+' : ''}{selectedOption.moneyChange}元
                 </Text>
               </View>
-            </Button>
-          ))}
+            </>
+          ) : (
+            <View className="flex items-center justify-center py-4">
+              <Text className="text-sm text-gray-500">系统正在决策中...</Text>
+            </View>
+          )}
         </View>
       </View>
     </View>
@@ -535,37 +559,39 @@ const IndexPage = () => {
     setShowLocationPicker(false);
     
     // 根据地点类型调整事件权重
-    const event = getRandomEvent();
+    const event = getWeightedRandomEvent();
     setCurrentEvent(event);
     setShowEventDialog(true);
     setGameStatus('EVENT');
   };
 
-  // 处理事件选项
-  const handleSelectOption = (option: GameEventOption) => {
-    updateBalance(option.moneyChange, currentEvent?.title || '', option.description, currentLocation?.name);
-    setLastChange(option.moneyChange);
+  // 处理事件选项 - 系统自动选择
+  const handleAutoSelectOption = () => {
+    if (!currentEvent || !user) return;
+    
+    const { option, moneyChange } = getRandomOption(currentEvent);
+    const newBalance = user.balance + moneyChange;
+    updateBalance(moneyChange, currentEvent.title, option.description, currentLocation?.name);
+    setLastChange(moneyChange);
     setShowEventDialog(false);
     setCurrentEvent(null);
     
     // 同步到后端
-    if (user) {
-      Network.request({
+    Network.request({
         url: '/api/game/record',
         method: 'POST',
         data: {
           userId: user.id,
           day: user.day,
-          eventTitle: currentEvent?.title,
+          eventTitle: currentEvent.title,
           eventResult: option.description,
-          moneyChange: option.moneyChange,
-          balance: user.balance + option.moneyChange,
-          locationName: currentLocation?.name || ''
+          moneyChange,
+          balance: newBalance,
+          locationName: currentLocation?.name || user.location.city,
         }
       }).then(() => {
         fetchRanking();
       });
-    }
   };
   
   // 下一天
@@ -829,7 +855,7 @@ const IndexPage = () => {
             <EventCard 
               event={currentEvent} 
               locationName={currentLocation?.name || user.location.city}
-              onSelectOption={handleSelectOption}
+              onAutoSelect={handleAutoSelectOption}
             />
           )}
         </View>
