@@ -1,5 +1,5 @@
 import { View, Text, ScrollView } from '@tarojs/components';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Calendar, TrendingUp, TrendingDown, MapPin, Clock, RefreshCw } from 'lucide-react-taro';
 import { Network } from '@/network';
@@ -21,17 +21,26 @@ export default function History() {
   const [records, setRecords] = useState<HistoryRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const user = useGameStore((state) => state.user);
-  const localRecords = user?.dailyRecords || [];
+  const gameStatus = useGameStore((state) => state.gameStatus);
 
-  useEffect(() => {
-    // 直接使用本地存储的dailyRecords数据
-    if (localRecords && localRecords.length >= 0) {
+  // 加载历史记录
+  const loadRecords = useCallback(() => {
+    // 直接从store获取最新的dailyRecords
+    const currentUser = useGameStore.getState().user;
+    if (!currentUser) {
+      setRecords([]);
+      setLoading(false);
+      return;
+    }
+    
+    const localRecords = currentUser.dailyRecords || [];
+    if (localRecords.length > 0) {
       const mappedRecords = localRecords.map((r, i) => ({
         ...r,
         id: r.eventTitle + i,
         eventTitle: r.eventTitle || '未知事件',
         eventResult: r.eventResult || '无描述',
-        locationName: r.locationName || user?.location?.city || '未知地点',
+        locationName: r.locationName || currentUser.location?.city || '未知地点',
         createdAt: r.date || new Date().toISOString(),
       }));
       // 倒序显示，最新的在前
@@ -40,18 +49,23 @@ export default function History() {
       setRecords([]);
     }
     setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    loadRecords();
     fetchHistory();
-  }, [user, localRecords]);
+  }, [loadRecords, gameStatus]);
 
   const fetchHistory = async () => {
-    if (!user) return;
+    const currentUser = useGameStore.getState().user;
+    if (!currentUser) return;
     
     setLoading(true);
     try {
       const res = await Network.request({
         url: '/api/game/history',
         method: 'GET',
-        data: { userId: user.id },
+        data: { userId: currentUser.id },
       });
       
       if (res.data?.code === 200 && res.data.data?.length > 0) {
@@ -67,6 +81,7 @@ export default function History() {
 
   // 手动刷新历史记录
   const handleRefresh = () => {
+    loadRecords();
     fetchHistory();
   };
 

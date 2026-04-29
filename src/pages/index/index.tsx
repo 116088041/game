@@ -315,13 +315,11 @@ const MoneyDisplay = ({ balance, change }: { balance: number; change?: number })
 const EventCard = ({ 
   event, 
   locationName,
-  onResultCalculated,
-  onClose
+  onResultCalculated
 }: { 
   event: GameEvent; 
   locationName: string;
   onResultCalculated: (option: GameEventOption, moneyChange: number) => void;
-  onClose: () => void;
 }) => {
   const [selectedOption, setSelectedOption] = useState<{ text: string; description: string; moneyChange: number } | null>(null);
   
@@ -336,13 +334,9 @@ const EventCard = ({
       });
       // 通知父组件计算结果
       onResultCalculated(result.option, result.moneyChange);
-      // 3秒后自动关闭
-      setTimeout(() => {
-        onClose();
-      }, 3000);
     }, 1500); // 1.5秒后显示结果
     return () => clearTimeout(timer);
-  }, [event, onResultCalculated, onClose]);
+  }, [event, onResultCalculated]);
   
   const getTypeColor = (type: string) => {
     switch (type) {
@@ -643,7 +637,7 @@ const IndexPage = () => {
         />
       </Dialog>
 
-      {/* 事件弹窗 - 自动关闭 */}
+      {/* 事件弹窗 - 手动关闭 */}
       <Dialog open={showEventDialog} onOpenChange={setShowEventDialog}>
         <View className="p-4">
           {currentEvent && (
@@ -653,35 +647,41 @@ const IndexPage = () => {
               onResultCalculated={(option, moneyChange) => {
                 setCurrentEventResult({ option, moneyChange });
               }}
-              onClose={() => {
-                // 执行事件结算逻辑
-                if (user && currentEventResult) {
-                  const { option, moneyChange } = currentEventResult;
-                  const newBalance = user.balance + moneyChange;
-                  updateBalance(moneyChange, currentEvent.title, option.description, currentLocation?.name);
-                  setLastChange(moneyChange);
-                  
-                  // 同步到后端
-                  Network.request({
-                    url: '/api/game/record',
-                    method: 'POST',
-                    data: {
-                      userId: user.id,
-                      day: user.day,
-                      eventTitle: currentEvent.title,
-                      eventResult: option.description,
-                      moneyChange,
-                      balance: newBalance,
-                      locationName: currentLocation?.name || user.location.city,
-                    }
-                  });
-                }
-                setShowEventDialog(false);
-                setCurrentEvent(null);
-                setCurrentEventResult(null);
-              }}
             />
           )}
+          {/* 关闭按钮 */}
+          <Button 
+            className="w-full mt-4 bg-amber-500 hover:bg-amber-600 text-white"
+            onClick={() => {
+              // 执行事件结算逻辑
+              if (user && currentEventResult) {
+                const { option, moneyChange } = currentEventResult;
+                const newBalance = user.balance + moneyChange;
+                updateBalance(moneyChange, currentEvent.title, option.description, currentLocation?.name);
+                setLastChange(moneyChange);
+                
+                // 同步到后端
+                Network.request({
+                  url: '/api/game/record',
+                  method: 'POST',
+                  data: {
+                    userId: user.id,
+                    day: user.day,
+                    eventTitle: currentEvent.title,
+                    eventResult: option.description,
+                    moneyChange,
+                    balance: newBalance,
+                    locationName: currentLocation?.name || user.location.city,
+                  }
+                });
+              }
+              setShowEventDialog(false);
+              setCurrentEvent(null);
+              setCurrentEventResult(null);
+            }}
+          >
+            <Text>关闭</Text>
+          </Button>
         </View>
       </Dialog>
 
