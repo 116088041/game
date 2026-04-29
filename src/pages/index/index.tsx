@@ -445,6 +445,7 @@ const IndexPage = () => {
   const [lastChange, setLastChange] = useState<number | undefined>(undefined);
   const [currentLocation, setCurrentLocation] = useState<District | null>(null);
   const [currentEventResult, setCurrentEventResult] = useState<{ option: GameEventOption; moneyChange: number } | null>(null);
+  const [videoError, setVideoError] = useState(false);
   
   // 获取当前城市的区域列表
   const getCurrentDistricts = (): District[] => {
@@ -572,17 +573,25 @@ const IndexPage = () => {
     <View className="min-h-screen bg-gray-50">
       {/* 街溜子行走动画 */}
       <View className="w-full aspect-video bg-gradient-to-b from-sky-200 to-sky-100 relative overflow-hidden">
-        <Video
-          className="w-full h-full"
-          src="https://coze-coding-project.tos.coze.site/coze_storage_7634003127947231295/video/video_generate_cgt-20260429114640-zb8m6.mp4"
-          controls={false}
-          autoplay={false}
-          loop
-          showCenterPlayBtn={false}
-          showPlayBtn={false}
-          enableProgressGesture={false}
-          objectFit="cover"
-        />
+        {videoError ? (
+          // 视频加载失败时显示静态图
+          <View className="w-full h-full flex items-center justify-center bg-gradient-to-b from-sky-200 to-gray-300">
+            <Text className="text-gray-500 text-sm">街溜子街头漫步</Text>
+          </View>
+        ) : (
+          <Video
+            className="w-full h-full"
+            src="https://coze-coding-project.tos.coze.site/coze_storage_7634003127947231295/video/video_generate_cgt-20260429114640-zb8m6.mp4"
+            controls={false}
+            autoplay={false}
+            loop
+            showCenterPlayBtn={false}
+            showPlayBtn={false}
+            enableProgressGesture={false}
+            objectFit="cover"
+            onError={() => setVideoError(true)}
+          />
+        )}
         <View className="absolute bottom-2 left-2 bg-black bg-opacity-50 rounded px-2 py-1">
           <Text className="text-white text-xs">街溜子街头漫步</Text>
         </View>
