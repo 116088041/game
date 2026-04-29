@@ -362,6 +362,11 @@ const EventCard = ({
     return Math.round(100 * (percent / 100));
   };
 
+  // 过滤描述中的数字
+  const filterNumbers = (text: string): string => {
+    return text.replace(/\d+/g, 'X');
+  };
+
   return (
     <View className="flex flex-col items-center p-4">
       <View className="w-full bg-white rounded-2xl p-5 shadow-lg">
@@ -384,33 +389,32 @@ const EventCard = ({
           </View>
           <View className="flex-1">
             <Text className="block text-lg font-bold text-gray-800">{event.title}</Text>
-            <Text className="block text-sm text-gray-500 mt-1">{event.description}</Text>
+            <Text className="block text-sm text-gray-500 mt-1">{filterNumbers(event.description)}</Text>
           </View>
         </View>
 
         {/* 选择结果 - 用户选择后显示 */}
         {selectedOption ? (
           <View className="mt-4 p-4 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl border border-amber-200">
-            <Text className="block text-base text-gray-800 font-medium">{selectedOption.option.description}</Text>
+            <Text className="block text-base text-gray-800 font-medium">{filterNumbers(selectedOption.option.description)}</Text>
             <View className="mt-3 pt-3 border-t border-amber-200">
               <View className="flex items-center justify-between mb-2">
-                <Text className={`text-xl font-bold ${selectedOption.moneyChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {selectedOption.moneyChange >= 0 ? '+' : ''}{selectedOption.moneyChange}元
-                </Text>
-                <View className="flex items-center gap-1">
-                  <Heart size={14} color={selectedOption.option.moralValue >= 0 ? '#10b981' : '#ef4444'} />
-                  <Text className={`text-sm ${selectedOption.option.moralValue >= 0 ? 'text-green-600' : 'text-red-500'}`}>
-                    {selectedOption.option.moralValue >= 0 ? '+' : ''}{selectedOption.option.moralValue}道德值
+                <View className="flex items-center gap-2">
+                  <Text className={`text-lg font-bold ${selectedOption.moneyChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    {selectedOption.moneyChange >= 0 ? '进账' : '支出'}
                   </Text>
+                  <View className="flex items-center gap-1">
+                    <Heart size={14} color={selectedOption.option.moralValue >= 0 ? '#10b981' : '#ef4444'} />
+                    <Text className={`text-sm ${selectedOption.option.moralValue >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+                      {selectedOption.option.moralValue >= 0 ? '+' : ''}{selectedOption.option.moralValue}道德
+                    </Text>
+                  </View>
                 </View>
+                <Text className="text-xs text-amber-600">
+                  点击关闭
+                </Text>
               </View>
-              <Text className="text-xs text-gray-400">
-                {selectedOption.moneyChange >= 0 ? '好事发生' : '破财消灾'}
-              </Text>
             </View>
-            <Text className="block text-xs text-amber-600 text-center mt-3">
-              点击右上角关闭按钮结束本轮
-            </Text>
           </View>
         ) : (
           /* 选项列表 - 用户选择 */
