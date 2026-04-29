@@ -297,7 +297,7 @@ const LocationPicker = ({
 const MoneyDisplay = ({ balance, change }: { balance: number; change?: number | null }) => {
   const showChange = change !== undefined && change !== null && change !== 0;
   return (
-    <View className="flex items-center gap-2">
+    <View className="h-8 flex items-center gap-2">
       <Coins size={24} color="#f59e0b" />
       <Text className="text-2xl font-bold text-amber-600">
         ¥{balance.toFixed(2)}
