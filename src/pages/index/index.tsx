@@ -316,11 +316,13 @@ const EventCard = ({
   event, 
   locationName,
   onSelect,
+  onClose,
   selectedOption
 }: { 
   event: GameEvent; 
   locationName: string;
   onSelect: (option: GameEventOption, moneyChange: number) => void;
+  onClose: () => void;
   selectedOption: { option: GameEventOption; moneyChange: number } | null;
 }) => {
   const getTypeColor = (type: string) => {
@@ -410,7 +412,7 @@ const EventCard = ({
                     </Text>
                   </View>
                 </View>
-                <Text className="text-xs text-amber-600">
+                <Text className="text-xs text-amber-600" onClick={onClose}>
                   点击关闭
                 </Text>
               </View>
@@ -726,6 +728,7 @@ const IndexPage = () => {
                 // 用户选择后设置结果，等待用户手动关闭
                 setCurrentEventResult({ option, moneyChange });
               }}
+              onClose={() => setShowEventDialog(false)}
             />
           )}
         </DialogContent>
