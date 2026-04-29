@@ -294,22 +294,25 @@ const LocationPicker = ({
 };
 
 // 资金展示组件
-const MoneyDisplay = ({ balance, change }: { balance: number; change?: number | null }) => (
-  <View className="flex items-center gap-2">
-    <Coins size={24} color="#f59e0b" />
-    <Text className="text-2xl font-bold text-amber-600">
-      ¥{balance.toFixed(2)}
-    </Text>
-    {change !== undefined && change !== null && change !== 0 && (
-      <View className={`flex items-center gap-1 px-2 py-1 rounded-full ${change > 0 ? 'bg-green-100' : 'bg-red-100'}`}>
-        {change > 0 ? <TrendingUp size={14} color="#16a34a" /> : <TrendingDown size={14} color="#dc2626" />}
-        <Text className={`text-sm font-medium ${change > 0 ? 'text-green-600' : 'text-red-600'}`}>
-          {change > 0 ? '+' : ''}{change}
-        </Text>
-      </View>
-    )}
-  </View>
-);
+const MoneyDisplay = ({ balance, change }: { balance: number; change?: number | null }) => {
+  const showChange = change !== undefined && change !== null && change !== 0;
+  return (
+    <View className="flex items-center gap-2">
+      <Coins size={24} color="#f59e0b" />
+      <Text className="text-2xl font-bold text-amber-600">
+        ¥{balance.toFixed(2)}
+      </Text>
+      {showChange && (
+        <View className={`flex items-center gap-1 px-2 py-1 rounded-full ${change > 0 ? 'bg-green-100' : 'bg-red-100'}`}>
+          {change > 0 ? <TrendingUp size={14} color="#16a34a" /> : <TrendingDown size={14} color="#dc2626" />}
+          <Text className={`text-sm font-medium ${change > 0 ? 'text-green-600' : 'text-red-600'}`}>
+            {change > 0 ? '+' : ''}{change}
+          </Text>
+        </View>
+      )}
+    </View>
+  );
+};
 
 // 事件卡片组件 - 用户选择后显示结果
 const EventCard = ({ 
@@ -688,8 +691,8 @@ const IndexPage = () => {
         </View>
         
         {/* 资金展示 */}
-        <View className="bg-white bg-opacity-20 rounded-2xl p-4">
-          <Text className="block text-amber-100 text-sm mb-1">当前资金</Text>
+        <View className="bg-white bg-opacity-20 rounded-2xl px-4 py-2">
+          <Text className="block text-amber-100 text-xs mb-1">当前资金</Text>
           <MoneyDisplay balance={user.balance} change={lastChange} />
         </View>
 
