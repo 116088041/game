@@ -95,7 +95,7 @@ const createInitialUser = (nickname: string, location: Location): UserData => {
     location,
     balance: 100,
     totalBalance: 100,
-    moralValue: 0, // 初始道德值为0
+    moralValue: 50, // 初始道德值为50
     startDate: now.toISOString().split('T')[0],
     dailyRecords: []
   };
