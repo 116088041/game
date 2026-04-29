@@ -311,32 +311,21 @@ const MoneyDisplay = ({ balance, change }: { balance: number; change?: number })
   </View>
 );
 
-// 事件卡片组件 - 系统自动选择结果展示
+// 事件卡片组件 - 展示事件和结果
 const EventCard = ({ 
   event, 
   locationName,
-  onResultCalculated
+  result
 }: { 
   event: GameEvent; 
   locationName: string;
-  onResultCalculated: (option: GameEventOption, moneyChange: number) => void;
+  result: { option: GameEventOption; moneyChange: number } | null;
 }) => {
-  const [selectedOption, setSelectedOption] = useState<{ text: string; description: string; moneyChange: number } | null>(null);
-  
-  // 系统自动选择结果（使用useEffect确保只在挂载时执行一次）
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      const result = getRandomOption(event);
-      setSelectedOption({
-        text: result.option.text,
-        description: result.option.description,
-        moneyChange: result.moneyChange,
-      });
-      // 通知父组件计算结果
-      onResultCalculated(result.option, result.moneyChange);
-    }, 1500); // 1.5秒后显示结果
-    return () => clearTimeout(timer);
-  }, [event, onResultCalculated]);
+  const selectedOption = result ? {
+    text: result.option.text,
+    description: result.option.description,
+    moneyChange: result.moneyChange,
+  } : null;
   
   const getTypeColor = (type: string) => {
     switch (type) {
@@ -449,11 +438,19 @@ const IndexPage = () => {
     setCurrentLocation(district);
     setShowLocationPicker(false);
     
-    // 根据地点类型调整事件权重
+    // 根据地点类型调整事件权重，并计算结果
     const event = getWeightedRandomEvent();
     setCurrentEvent(event);
-    setShowEventDialog(true);
-    setGameStatus('EVENT');
+    
+    // 立即计算结果
+    const result = getRandomOption(event);
+    setCurrentEventResult({ option: result.option, moneyChange: result.moneyChange });
+    
+    // 1.5秒后显示结果
+    setTimeout(() => {
+      setShowEventDialog(true);
+      setGameStatus('EVENT');
+    }, 1500);
   };
   
   // 获取排名信息
@@ -663,13 +660,11 @@ const IndexPage = () => {
       }}
       >
         <DialogContent className="max-h-[80vh] overflow-y-auto">
-          {currentEvent && (
+          {currentEvent && currentEventResult && (
             <EventCard
               event={currentEvent}
               locationName={currentLocation?.name || user.location.city}
-              onResultCalculated={(option, moneyChange) => {
-                setCurrentEventResult({ option, moneyChange });
-              }}
+              result={currentEventResult}
             />
           )}
         </DialogContent>
