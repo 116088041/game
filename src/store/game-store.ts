@@ -117,11 +117,11 @@ export const useGameStore = create<GameState>()(
         if (!user) return;
         
         const newBalance = user.balance + change;
-        const timestamp = new Date().toISOString(); // 完整时间戳用于排序
+        const today = new Date().toISOString().split('T')[0];
         
         const dailyRecord: DailyRecord = {
           day: user.day,
-          date: timestamp,
+          date: today,
           moneyChange: change,
           balance: newBalance,
           eventTitle,
