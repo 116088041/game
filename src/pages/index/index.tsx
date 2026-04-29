@@ -6,7 +6,7 @@ import { Dialog } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import Taro from '@tarojs/taro';
 import { 
-  Trophy, Coins, MapPin, Calendar, TrendingUp, 
+  Coins, MapPin, Calendar, TrendingUp, 
   TrendingDown, CircleAlert, Zap, Crown, Building,
   RefreshCw, User, Clock, Map, Navigation, Store
 } from 'lucide-react-taro';
@@ -242,20 +242,6 @@ const LocationPicker = ({
   onSelect: (d: District) => void;
   onCancel: () => void;
 }) => {
-  const [filterType, setFilterType] = useState<District['type'] | 'all'>('all');
-
-  const filteredDistricts = filterType === 'all' 
-    ? districts 
-    : districts.filter(d => d.type === filterType);
-
-  const typeOptions: { type: District['type'] | 'all'; label: string }[] = [
-    { type: 'all', label: '全部' },
-    { type: 'business', label: '商圈' },
-    { type: 'street', label: '街区' },
-    { type: 'scenic', label: '景点' },
-    { type: 'district', label: '区县' },
-  ];
-
   return (
     <View className="p-4">
       <Text className="block text-xl font-bold text-center mb-4 text-gray-800">
@@ -265,25 +251,10 @@ const LocationPicker = ({
         第{useGameStore.getState().user?.day || 1}天 - 选择一个地点触发事件
       </Text>
 
-      {/* 类型筛选 */}
-      <ScrollView scrollX className="mb-4">
-        <View className="flex gap-2">
-          {typeOptions.map(opt => (
-            <View 
-              key={opt.type}
-              className={`px-3 py-1 rounded-full ${filterType === opt.type ? 'bg-amber-500 text-white' : 'bg-gray-100 text-gray-600'}`}
-              onClick={() => setFilterType(opt.type)}
-            >
-              <Text className="text-xs">{opt.label}</Text>
-            </View>
-          ))}
-        </View>
-      </ScrollView>
-
       {/* 地点列表 */}
       <ScrollView scrollY className="max-h-80">
         <View className="grid grid-cols-2 gap-2">
-          {filteredDistricts.map((district, index) => {
+          {districts.map((district, index) => {
             const { icon: IconComp, color, bg } = getDistrictIcon(district.type);
             return (
               <View 
@@ -382,17 +353,14 @@ const RankingCard = ({
 // 事件卡片组件 - 系统自动选择结果展示
 const EventCard = ({ 
   event, 
-  locationName,
-  onAutoSelect 
+  locationName
 }: { 
   event: GameEvent; 
   locationName: string;
-  onAutoSelect: () => void;
 }) => {
   const [selectedOption, setSelectedOption] = useState<{ text: string; description: string; moneyChange: number } | null>(null);
   
-  // 系统自动选择（使用useEffect确保只在挂载时执行一次）
-  // 事件展示时间增加到4秒，让用户能看清搞笑故事内容
+  // 系统自动选择结果（使用useEffect确保只在挂载时执行一次）
   useEffect(() => {
     const timer = setTimeout(() => {
       const result = getRandomOption(event);
@@ -404,14 +372,6 @@ const EventCard = ({
     }, 1500); // 1.5秒后显示结果
     return () => clearTimeout(timer);
   }, [event]);
-
-  // 4秒后自动关闭弹窗，给用户充足时间阅读故事
-  useEffect(() => {
-    const closeTimer = setTimeout(() => {
-      onAutoSelect();
-    }, 5000); // 5秒后自动关闭
-    return () => clearTimeout(closeTimer);
-  }, [onAutoSelect]);
   
   const getTypeColor = (type: string) => {
     switch (type) {
@@ -568,35 +528,6 @@ const IndexPage = () => {
     setCurrentEvent(event);
     setShowEventDialog(true);
     setGameStatus('EVENT');
-  };
-
-  // 处理事件选项 - 系统自动选择
-  const handleAutoSelectOption = () => {
-    if (!currentEvent || !user) return;
-    
-    const { option, moneyChange } = getRandomOption(currentEvent);
-    const newBalance = user.balance + moneyChange;
-    updateBalance(moneyChange, currentEvent.title, option.description, currentLocation?.name);
-    setLastChange(moneyChange);
-    setShowEventDialog(false);
-    setCurrentEvent(null);
-    
-    // 同步到后端
-    Network.request({
-        url: '/api/game/record',
-        method: 'POST',
-        data: {
-          userId: user.id,
-          day: user.day,
-          eventTitle: currentEvent.title,
-          eventResult: option.description,
-          moneyChange,
-          balance: newBalance,
-          locationName: currentLocation?.name || user.location.city,
-        }
-      }).then(() => {
-        fetchRanking();
-      });
   };
   
   // 下一天
@@ -768,28 +699,16 @@ const IndexPage = () => {
 
       {/* 主操作区 */}
       <View className="p-4">
-        {/* 操作按钮 */}
-        <View className="grid grid-cols-2 gap-3 mb-4">
+        {/* 主操作按钮 */}
+        <View className="mb-4">
           <Button 
-            className="h-20 bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow-lg"
+            className="w-full h-20 bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow-lg"
             onClick={handleGetEvent}
           >
             <View className="flex flex-col items-center">
               <Zap size={28} color="#ffffff" className="mb-1" />
               <Text className="text-base font-bold">出门探索</Text>
               <Text className="text-xs opacity-80">选择地点</Text>
-            </View>
-          </Button>
-          
-          <Button 
-            variant="outline"
-            className="h-20 border-2 border-amber-200"
-            onClick={() => setShowRankDialog(true)}
-          >
-            <View className="flex flex-col items-center">
-              <Trophy size={28} color="#f59e0b" className="mb-1" />
-              <Text className="text-base font-bold text-gray-700">排行榜</Text>
-              <Text className="text-xs text-gray-400">查看排名</Text>
             </View>
           </Button>
         </View>
@@ -806,17 +725,6 @@ const IndexPage = () => {
               <Text className="text-sm text-gray-600">下一天</Text>
             </View>
           </Button>
-          
-          <Button 
-            variant="outline"
-            className="flex-1 h-14"
-            onClick={() => setShowHistoryDialog(true)}
-          >
-            <View className="flex items-center gap-2">
-              <Crown size={18} color="#f59e0b" />
-              <Text className="text-sm text-gray-600">历史记录</Text>
-            </View>
-          </Button>
         </View>
 
         {/* 当前城市可探索地点提示 */}
@@ -830,23 +738,6 @@ const IndexPage = () => {
                 <Text className="block text-sm font-bold text-gray-800 mb-1">{user.location.city}可探索地点</Text>
                 <Text className="block text-xs text-gray-600 leading-relaxed">
                   共有 {getCurrentDistricts().length} 个可探索地点：商圈 {getCurrentDistricts().filter(d => d.type === 'business').length} 个、街区 {getCurrentDistricts().filter(d => d.type === 'street').length} 个、景点 {getCurrentDistricts().filter(d => d.type === 'scenic').length} 个、区县 {getCurrentDistricts().filter(d => d.type === 'district').length} 个
-                </Text>
-              </View>
-            </View>
-          </CardContent>
-        </Card>
-
-        {/* 游戏提示 */}
-        <Card className="bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200">
-          <CardContent className="p-4">
-            <View className="flex items-start gap-3">
-              <View className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
-                <Text className="text-xl">💡</Text>
-              </View>
-              <View>
-                <Text className="block text-sm font-bold text-gray-800 mb-1">游戏提示</Text>
-                <Text className="block text-xs text-gray-600 leading-relaxed">
-                  每天出门前先选择要去的地点！不同地点会遇到不同的事件。商圈适合工作和投资，街区适合消费，景点可能有惊喜！
                 </Text>
               </View>
             </View>
@@ -871,16 +762,49 @@ const IndexPage = () => {
         />
       </Dialog>
 
-      {/* 事件弹窗 */}
+      {/* 事件弹窗 - 手动关闭 */}
       <Dialog open={showEventDialog} onOpenChange={setShowEventDialog}>
         <View className="p-4">
           {currentEvent && (
             <EventCard 
               event={currentEvent} 
               locationName={currentLocation?.name || user.location.city}
-              onAutoSelect={handleAutoSelectOption}
             />
           )}
+          {/* 关闭按钮 - 点击后结算事件 */}
+          <Button 
+            className="w-full mt-4 bg-amber-500 hover:bg-amber-600 text-white"
+            onClick={() => {
+              // 执行事件结算逻辑
+              if (currentEvent && user) {
+                const { option, moneyChange } = getRandomOption(currentEvent);
+                const newBalance = user.balance + moneyChange;
+                updateBalance(moneyChange, currentEvent.title, option.description, currentLocation?.name);
+                setLastChange(moneyChange);
+                
+                // 同步到后端
+                Network.request({
+                  url: '/api/game/record',
+                  method: 'POST',
+                  data: {
+                    userId: user.id,
+                    day: user.day,
+                    eventTitle: currentEvent.title,
+                    eventResult: option.description,
+                    moneyChange,
+                    balance: newBalance,
+                    locationName: currentLocation?.name || user.location.city,
+                  }
+                }).then(() => {
+                  fetchRanking();
+                });
+              }
+              setShowEventDialog(false);
+              setCurrentEvent(null);
+            }}
+          >
+            <Text>关闭</Text>
+          </Button>
         </View>
       </Dialog>
 
