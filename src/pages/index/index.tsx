@@ -397,14 +397,10 @@ const EventCard = ({
           </View>
         </View>
 
-        {/* 系统自动选择结果 */}
+        {/* 结果展示 */}
         <View className="mt-4 p-4 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl border border-amber-200">
           {selectedOption ? (
             <>
-              <View className="flex items-center gap-2 mb-2">
-                <Zap size={16} color="#f59e0b" />
-                <Text className="text-sm font-medium text-amber-700">系统自动选择</Text>
-              </View>
               <Text className="block text-base text-gray-800 font-medium">{selectedOption.text}</Text>
               <Text className="block text-sm text-gray-500 mt-1">{selectedOption.description}</Text>
               <View className="mt-3 pt-3 border-t border-amber-200">
