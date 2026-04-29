@@ -1,7 +1,7 @@
 import { View, Text, ScrollView } from '@tarojs/components';
 import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Calendar, TrendingUp, TrendingDown, MapPin, Clock } from 'lucide-react-taro';
+import { Calendar, TrendingUp, TrendingDown, MapPin, Clock, RefreshCw } from 'lucide-react-taro';
 import { Network } from '@/network';
 import { useGameStore } from '@/store/game-store';
 import './index.css';
@@ -21,10 +21,23 @@ export default function History() {
   const [records, setRecords] = useState<HistoryRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const user = useGameStore((state) => state.user);
+  const localRecords = user?.dailyRecords || [];
 
   useEffect(() => {
+    // 优先使用本地存储的数据，同时尝试从后端获取
+    if (localRecords.length > 0) {
+      setRecords(localRecords.map((r, i) => ({
+        ...r,
+        id: r.eventTitle + i,
+        eventTitle: r.eventTitle || '未知事件',
+        eventResult: r.eventResult || '无描述',
+        locationName: r.locationName || user?.location?.city || '未知地点',
+        createdAt: r.date || new Date().toISOString(),
+      })));
+      setLoading(false);
+    }
     fetchHistory();
-  }, []);
+  }, [user]);
 
   const fetchHistory = async () => {
     if (!user) return;
@@ -37,14 +50,20 @@ export default function History() {
         data: { userId: user.id },
       });
       
-      if (res.data?.code === 200) {
-        setRecords(res.data.data || []);
+      if (res.data?.code === 200 && res.data.data?.length > 0) {
+        // 后端数据优先
+        setRecords(res.data.data);
       }
     } catch (error) {
       console.error('获取历史记录失败:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  // 手动刷新历史记录
+  const handleRefresh = () => {
+    fetchHistory();
   };
 
   const getDaySummary = () => {
@@ -63,7 +82,9 @@ export default function History() {
   const summary = getDaySummary();
 
   const formatDate = (dateStr: string) => {
+    if (!dateStr) return '';
     const date = new Date(dateStr);
+    if (Number.isNaN(date.getTime())) return dateStr;
     return `${date.getMonth() + 1}/${date.getDate()} ${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`;
   };
 
@@ -79,11 +100,19 @@ export default function History() {
     <View className="min-h-screen bg-gradient-to-b from-amber-50 to-orange-50">
       {/* 头部 */}
       <View className="bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-6">
-        <View className="flex items-center gap-2 mb-2">
-          <Clock size={24} color="#fff" />
-          <Text className="text-xl font-bold text-white">游戏历史</Text>
+        <View className="flex items-center justify-between">
+          <View className="flex items-center gap-2">
+            <Clock size={24} color="#fff" />
+            <Text className="text-xl font-bold text-white">游戏历史</Text>
+          </View>
+          <View 
+            className="p-2 bg-white bg-opacity-20 rounded-full"
+            onClick={handleRefresh}
+          >
+            <RefreshCw size={18} color="#fff" />
+          </View>
         </View>
-        <Text className="text-amber-100 text-sm">记录你的每一次选择</Text>
+        <Text className="text-amber-100 text-sm mt-1">记录你的每一次选择</Text>
       </View>
 
       {/* 统计卡片 */}

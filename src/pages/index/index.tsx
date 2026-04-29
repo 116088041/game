@@ -392,6 +392,7 @@ const EventCard = ({
   const [selectedOption, setSelectedOption] = useState<{ text: string; description: string; moneyChange: number } | null>(null);
   
   // 系统自动选择（使用useEffect确保只在挂载时执行一次）
+  // 事件展示时间增加到4秒，让用户能看清搞笑故事内容
   useEffect(() => {
     const timer = setTimeout(() => {
       const result = getRandomOption(event);
@@ -400,13 +401,17 @@ const EventCard = ({
         description: result.option.description,
         moneyChange: result.moneyChange,
       });
-      // 延迟触发回调，确保UI先渲染
-      setTimeout(() => {
-        onAutoSelect();
-      }, 500);
-    }, 100);
+    }, 1500); // 1.5秒后显示结果
     return () => clearTimeout(timer);
-  }, [event, onAutoSelect]);
+  }, [event]);
+
+  // 4秒后自动关闭弹窗，给用户充足时间阅读故事
+  useEffect(() => {
+    const closeTimer = setTimeout(() => {
+      onAutoSelect();
+    }, 5000); // 5秒后自动关闭
+    return () => clearTimeout(closeTimer);
+  }, [onAutoSelect]);
   
   const getTypeColor = (type: string) => {
     switch (type) {
