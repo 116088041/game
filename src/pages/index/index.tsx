@@ -1,31 +1,709 @@
-import { View, Text, Image } from '@tarojs/components';
-import { useLoad } from '@tarojs/taro';
+import { View, Text, ScrollView } from '@tarojs/components';
+import { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Dialog } from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
+import { 
+  Trophy, Coins, MapPin, Calendar, TrendingUp, 
+  TrendingDown, CircleAlert, Zap, Crown, Building,
+  RefreshCw, User, Clock
+} from 'lucide-react-taro';
+import { chinaProvinces, type Province, type City } from '@/data/china-cities';
+import { getRandomEvent, type GameEvent, type GameEventOption } from '@/data/game-events';
+import { useGameStore, initializeUser, type RankingInfo } from '@/store/game-store';
 import { Network } from '@/network';
 import './index.css';
 
-/**
- * 默认首页，直接覆盖本页内容
- */
-const IndexPage = () => {
-  useLoad(async () => {
-    const res = await Network.request({ url: '/api/hello' });
-    console.log(res.data);
-  });
+// 出生地选择器组件
+const LocationSelector = ({ 
+  selectedProvince, 
+  setSelectedProvince,
+  selectedCity,
+  setSelectedCity,
+  nickname,
+  setNickname
+}: {
+  selectedProvince: Province | null;
+  setSelectedProvince: (p: Province) => void;
+  selectedCity: City | null;
+  setSelectedCity: (c: City) => void;
+  nickname: string;
+  setNickname: (n: string) => void;
+}) => {
+  const [step, setStep] = useState<'nickname' | 'province' | 'city'>('nickname');
+  const [searchText, setSearchText] = useState('');
+
+  const filteredProvinces = chinaProvinces.filter(p => 
+    p.name.includes(searchText) || p.code.includes(searchText)
+  );
+
+  const filteredCities = selectedProvince?.cities.filter(c =>
+    c.name.includes(searchText) || c.code.includes(searchText)
+  ) || [];
 
   return (
-    <View className="w-full h-full flex flex-col justify-center items-center gap-1">
-      <Image
-        className="w-32 h-28"
-        src="https://lf-coze-web-cdn.coze.cn/obj/eden-cn/lm-lgvj/ljhwZthlaukjlkulzlp/coze-coding/icon/coze-coding.gif"
-      />
-      <View className="self-stretch flex flex-col justify-start items-start gap-2">
-        <Text className="self-stretch text-center justify-start text-base-accent-foreground text-base font-bold">
-          应用开发中
-        </Text>
-        <Text className="self-stretch text-center justify-start text-base-muted-foreground text-sm font-normal">
-          请稍候，界面即将呈现
+    <View className="flex flex-col h-full">
+      {/* 步骤指示器 */}
+      <View className="flex items-center justify-center gap-2 py-4">
+        <View className={`w-8 h-8 rounded-full flex items-center justify-center ${step === 'nickname' ? 'bg-amber-500 text-white' : 'bg-amber-100 text-amber-600'}`}>
+          <Text className="text-sm font-bold">{step === 'nickname' ? '1' : '✓'}</Text>
+        </View>
+        <View className="w-8 h-1 bg-amber-200" />
+        <View className={`w-8 h-8 rounded-full flex items-center justify-center ${step === 'province' ? 'bg-amber-500 text-white' : selectedProvince ? 'bg-amber-100 text-amber-600' : 'bg-gray-100 text-gray-400'}`}>
+          <Text className="text-sm font-bold">{selectedProvince ? '✓' : '2'}</Text>
+        </View>
+        <View className="w-8 h-1 bg-amber-200" />
+        <View className={`w-8 h-8 rounded-full flex items-center justify-center ${step === 'city' && selectedProvince ? 'bg-amber-500 text-white' : selectedCity ? 'bg-amber-100 text-amber-600' : 'bg-gray-100 text-gray-400'}`}>
+          <Text className="text-sm font-bold">{selectedCity ? '✓' : '3'}</Text>
+        </View>
+      </View>
+
+      {/* 昵称输入 */}
+      {step === 'nickname' && (
+        <View className="flex-1 flex flex-col px-4">
+          <Text className="text-2xl font-bold text-center mb-2 text-gray-800">欢迎来到游戏世界</Text>
+          <Text className="text-base text-center mb-8 text-gray-500">你将从一个默默无闻的小人物开始，用100块钱逆袭成为首富</Text>
+          
+          <View className="bg-white rounded-2xl p-6 shadow-sm">
+            <Text className="block text-base font-medium mb-2 text-gray-700">给自己取个响亮的昵称</Text>
+            <View className="bg-gray-50 rounded-xl px-4 py-3 mb-4">
+              <input
+                type="text"
+                className="w-full bg-transparent text-base"
+                placeholder="输入你的昵称"
+                value={nickname}
+                onInput={(e: any) => setNickname(e.detail.value)}
+                maxLength={10}
+              />
+            </View>
+            <Text className="block text-sm text-gray-400 mb-4">昵称将在排行榜中展示</Text>
+            
+            <Button 
+              className="w-full bg-amber-500 hover:bg-amber-600 text-white"
+              disabled={!nickname.trim()}
+              onClick={() => setStep('province')}
+            >
+              <Text className="text-base font-medium">下一步</Text>
+            </Button>
+          </View>
+        </View>
+      )}
+
+      {/* 省份选择 */}
+      {step === 'province' && (
+        <View className="flex-1 flex flex-col">
+          <View className="px-4 py-2">
+            <View className="bg-gray-50 rounded-xl px-4 py-2">
+              <input
+                type="text"
+                className="w-full bg-transparent text-base"
+                placeholder="搜索省份..."
+                value={searchText}
+                onInput={(e: any) => setSearchText(e.detail.value)}
+              />
+            </View>
+          </View>
+          
+          <ScrollView scrollY className="flex-1 px-4">
+            <View className="grid grid-cols-3 gap-2 pb-4">
+              {filteredProvinces.map(province => (
+                <View 
+                  key={province.code}
+                  className={`p-3 rounded-xl text-center ${selectedProvince?.code === province.code ? 'bg-amber-500 text-white' : 'bg-gray-50 text-gray-700'}`}
+                  onClick={() => setSelectedProvince(province)}
+                >
+                  <Text className="block text-sm truncate">{province.name}</Text>
+                </View>
+              ))}
+            </View>
+          </ScrollView>
+          
+          <View className="px-4 py-3 bg-white border-t border-gray-100">
+            <View className="flex gap-2">
+              <Button variant="outline" className="flex-1" onClick={() => setStep('nickname')}>
+                <Text>上一步</Text>
+              </Button>
+              <Button 
+                className="flex-1 bg-amber-500 hover:bg-amber-600 text-white"
+                disabled={!selectedProvince}
+                onClick={() => setStep('city')}
+              >
+                <Text>下一步</Text>
+              </Button>
+            </View>
+          </View>
+        </View>
+      )}
+
+      {/* 城市选择 */}
+      {step === 'city' && selectedProvince && (
+        <View className="flex-1 flex flex-col">
+          <View className="px-4 py-2">
+            <Text className="block text-base font-medium mb-2 text-gray-700">
+              选择城市 - {selectedProvince.name}
+            </Text>
+            <View className="bg-gray-50 rounded-xl px-4 py-2">
+              <input
+                type="text"
+                className="w-full bg-transparent text-base"
+                placeholder="搜索城市..."
+                value={searchText}
+                onInput={(e: any) => setSearchText(e.detail.value)}
+              />
+            </View>
+          </View>
+          
+          <ScrollView scrollY className="flex-1 px-4">
+            <View className="grid grid-cols-3 gap-2 pb-4">
+              {filteredCities.map(city => (
+                <View 
+                  key={city.code}
+                  className={`p-3 rounded-xl text-center ${selectedCity?.code === city.code ? 'bg-amber-500 text-white' : 'bg-gray-50 text-gray-700'}`}
+                  onClick={() => setSelectedCity(city)}
+                >
+                  <Text className="block text-sm truncate">{city.name}</Text>
+                </View>
+              ))}
+            </View>
+          </ScrollView>
+          
+          <View className="px-4 py-3 bg-white border-t border-gray-100">
+            <View className="flex gap-2">
+              <Button variant="outline" className="flex-1" onClick={() => setStep('province')}>
+                <Text>上一步</Text>
+              </Button>
+              <Button 
+                className="flex-1 bg-amber-500 hover:bg-amber-600 text-white"
+                disabled={!selectedCity}
+                onClick={() => {
+                  if (selectedProvince && selectedCity) {
+                    initializeUser(nickname, {
+                      province: selectedProvince.name,
+                      provinceCode: selectedProvince.code,
+                      city: selectedCity.name,
+                      cityCode: selectedCity.code
+                    });
+                  }
+                }}
+              >
+                <Zap size={16} color="#ffffff" className="mr-1" />
+                <Text>开始游戏</Text>
+              </Button>
+            </View>
+          </View>
+        </View>
+      )}
+    </View>
+  );
+};
+
+// 资金展示组件
+const MoneyDisplay = ({ balance, change }: { balance: number; change?: number }) => (
+  <View className="flex items-center gap-2">
+    <Coins size={24} color="#f59e0b" />
+    <Text className="text-2xl font-bold text-amber-600">
+      ¥{balance.toFixed(2)}
+    </Text>
+    {change !== undefined && change !== 0 && (
+      <View className={`flex items-center gap-1 px-2 py-1 rounded-full ${change > 0 ? 'bg-green-100' : 'bg-red-100'}`}>
+        {change > 0 ? <TrendingUp size={14} color="#16a34a" /> : <TrendingDown size={14} color="#dc2626" />}
+        <Text className={`text-sm font-medium ${change > 0 ? 'text-green-600' : 'text-red-600'}`}>
+          {change > 0 ? '+' : ''}{change}
         </Text>
       </View>
+    )}
+  </View>
+);
+
+// 排名卡片组件
+const RankingCard = ({ 
+  title, 
+  icon: Icon, 
+  rank, 
+  total, 
+  richest 
+}: { 
+  title: string; 
+  icon: any; 
+  rank: number; 
+  total: number; 
+  richest: { nickname: string; balance: number } | null | undefined;
+}) => (
+  <Card className="flex-1">
+    <CardContent className="p-3">
+      <View className="flex items-center gap-2 mb-2">
+        <Icon size={16} color="#f59e0b" />
+        <Text className="block text-sm font-medium text-gray-700">{title}</Text>
+      </View>
+      <Text className="block text-xl font-bold text-gray-800">
+        第{rank}名 <Text className="text-sm font-normal text-gray-400">/ 共{total}人</Text>
+      </Text>
+      {richest && (
+        <View className="mt-2 pt-2 border-t border-gray-100">
+          <Text className="block text-xs text-gray-400">当前首富</Text>
+          <Text className="block text-sm font-medium text-amber-600 truncate">{richest.nickname}</Text>
+          <Text className="block text-xs text-amber-500">¥{richest.balance.toFixed(2)}</Text>
+        </View>
+      )}
+    </CardContent>
+  </Card>
+);
+
+// 事件卡片组件
+const EventCard = ({ 
+  event, 
+  onSelectOption 
+}: { 
+  event: GameEvent; 
+  onSelectOption: (option: GameEventOption) => void;
+}) => {
+  const getTypeColor = (type: string) => {
+    switch (type) {
+      case 'work': return 'bg-blue-100 text-blue-600';
+      case 'investment': return 'bg-purple-100 text-purple-600';
+      case 'consumption': return 'bg-orange-100 text-orange-600';
+      case 'opportunity': return 'bg-green-100 text-green-600';
+      case 'risk': return 'bg-red-100 text-red-600';
+      default: return 'bg-gray-100 text-gray-600';
+    }
+  };
+
+  const getTypeText = (type: string) => {
+    switch (type) {
+      case 'work': return '工作';
+      case 'investment': return '投资';
+      case 'consumption': return '消费';
+      case 'opportunity': return '机遇';
+      case 'risk': return '风险';
+      default: return '随机';
+    }
+  };
+
+  return (
+    <View className="flex flex-col items-center p-4">
+      <View className="w-full bg-white rounded-2xl p-5 shadow-lg">
+        <View className="flex items-center justify-between mb-4">
+          <Badge className={getTypeColor(event.type)}>
+            <Text className="text-xs">{getTypeText(event.type)}</Text>
+          </Badge>
+          <Text className="text-sm text-gray-400">第{useGameStore.getState().user?.day || 1}天</Text>
+        </View>
+        
+        <View className="flex items-center gap-3 mb-4">
+          <View className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center">
+            <Text className="text-2xl">{event.icon === 'Briefcase' ? '💼' : event.icon === 'TrendingUp' ? '📈' : event.icon === 'Utensils' ? '🍜' : event.icon === 'Wallet' ? '👛' : event.icon === 'AlertTriangle' ? '⚠️' : '🎲'}</Text>
+          </View>
+          <View className="flex-1">
+            <Text className="block text-lg font-bold text-gray-800">{event.title}</Text>
+            <Text className="block text-sm text-gray-500 mt-1">{event.description}</Text>
+          </View>
+        </View>
+
+        <View className="space-y-2">
+          {event.options.map((option, index) => (
+            <Button
+              key={index}
+              variant="outline"
+              className="w-full justify-start h-auto py-3 px-4 border-gray-200 hover:border-amber-400 hover:bg-amber-50"
+              onClick={() => onSelectOption(option)}
+            >
+              <View className="flex flex-col items-start">
+                <Text className="text-base text-gray-800">{option.text}</Text>
+                <Text className={`text-sm mt-1 ${option.moneyChange > 0 ? 'text-green-600' : option.moneyChange < 0 ? 'text-red-600' : 'text-gray-400'}`}>
+                  {option.moneyChange > 0 ? `+${option.moneyChange}元` : option.moneyChange < 0 ? `${option.moneyChange}元` : '无变化'}
+                </Text>
+              </View>
+            </Button>
+          ))}
+        </View>
+      </View>
+    </View>
+  );
+};
+
+// 每日记录卡片
+const DailyRecordCard = ({ record }: { record: any }) => (
+  <Card className="mb-2">
+    <CardContent className="p-3">
+      <View className="flex items-center justify-between">
+        <View className="flex items-center gap-2">
+          <View className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center">
+            <Text className="text-sm font-bold text-amber-600">第{record.day}天</Text>
+          </View>
+          <View>
+            <Text className="block text-sm font-medium text-gray-800">{record.eventTitle}</Text>
+            <Text className="block text-xs text-gray-400">{record.eventResult}</Text>
+          </View>
+        </View>
+        <Text className={`text-base font-bold ${record.moneyChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+          {record.moneyChange >= 0 ? '+' : ''}{record.moneyChange}元
+        </Text>
+      </View>
+    </CardContent>
+  </Card>
+);
+
+// 主页面组件
+const IndexPage = () => {
+  const { user, gameStatus, setGameStatus, updateBalance, setCurrentEvent, currentEvent, setRanking } = useGameStore();
+  
+  // 出生地选择状态
+  const [selectedProvince, setSelectedProvince] = useState<Province | null>(null);
+  const [selectedCity, setSelectedCity] = useState<City | null>(null);
+  const [nickname, setNickname] = useState('');
+  
+  // UI状态
+  const [showEventDialog, setShowEventDialog] = useState(false);
+  const [showRankDialog, setShowRankDialog] = useState(false);
+  const [showHistoryDialog, setShowHistoryDialog] = useState(false);
+  const [lastChange, setLastChange] = useState<number | undefined>(undefined);
+  
+  // 获取随机事件
+  const handleGetEvent = () => {
+    const event = getRandomEvent();
+    setCurrentEvent(event);
+    setShowEventDialog(true);
+    setGameStatus('EVENT');
+  };
+  
+  // 处理事件选项
+  const handleSelectOption = (option: GameEventOption) => {
+    updateBalance(option.moneyChange, currentEvent?.title || '', option.description);
+    setLastChange(option.moneyChange);
+    setShowEventDialog(false);
+    setCurrentEvent(null);
+    
+    // 同步到后端
+    if (user) {
+      Network.request({
+        url: '/api/game/record',
+        method: 'POST',
+        data: {
+          userId: user.id,
+          day: user.day,
+          eventTitle: currentEvent?.title,
+          eventResult: option.description,
+          moneyChange: option.moneyChange,
+          balance: user.balance + option.moneyChange
+        }
+      }).then(() => {
+        // 更新排名
+        fetchRanking();
+      });
+    }
+  };
+  
+  // 下一天
+  const handleNextDay = () => {
+    if (user) {
+      useGameStore.getState().syncUserData({ day: user.day + 1 });
+    }
+    setLastChange(undefined);
+  };
+  
+  // 获取排名信息
+  const fetchRanking = async () => {
+    if (!user) return;
+    
+    try {
+      const res = await Network.request({
+        url: '/api/game/ranking',
+        method: 'GET',
+        data: {
+          userId: user.id,
+          cityCode: user.location.cityCode,
+          provinceCode: user.location.provinceCode
+        }
+      });
+      
+      if (res.data.code === 200) {
+        setRanking(res.data.data);
+      }
+    } catch {
+      // 后端未连接时使用模拟数据
+      const mockRanking: RankingInfo = {
+        cityRank: Math.floor(Math.random() * 100) + 1,
+        cityTotal: Math.floor(Math.random() * 500) + 100,
+        cityRichest: { nickname: '神秘大佬', balance: Math.floor(Math.random() * 10000) + 5000 },
+        provinceRank: Math.floor(Math.random() * 1000) + 1,
+        provinceTotal: Math.floor(Math.random() * 5000) + 1000,
+        provinceRichest: { nickname: '省内首富', balance: Math.floor(Math.random() * 50000) + 20000 },
+        nationalRank: Math.floor(Math.random() * 10000) + 1,
+        nationalTotal: Math.floor(Math.random() * 50000) + 10000,
+        nationalRichest: { nickname: '全国首富', balance: Math.floor(Math.random() * 1000000) + 500000 }
+      };
+      setRanking(mockRanking);
+    }
+  };
+  
+  // 初始化加载排名
+  useEffect(() => {
+    if (user && gameStatus === 'PLAYING') {
+      fetchRanking();
+    }
+  }, [user?.id]);
+  
+  // 游戏结束
+  const handleGameOver = () => {
+    useGameStore.getState().resetGame();
+    setSelectedProvince(null);
+    setSelectedCity(null);
+    setNickname('');
+  };
+  
+  // 重新开始
+  const handleRestart = () => {
+    handleGameOver();
+  };
+
+  // 渲染出生地选择界面
+  if (gameStatus === 'INIT' || !user) {
+    return (
+      <View className="min-h-screen bg-gradient-to-b from-amber-50 to-orange-50">
+        <LocationSelector
+          selectedProvince={selectedProvince}
+          setSelectedProvince={setSelectedProvince}
+          selectedCity={selectedCity}
+          setSelectedCity={setSelectedCity}
+          nickname={nickname}
+          setNickname={setNickname}
+        />
+      </View>
+    );
+  }
+
+  // 渲染游戏结束界面
+  if (gameStatus === 'GAME_OVER') {
+    return (
+      <View className="min-h-screen bg-gradient-to-b from-red-50 to-orange-50 flex flex-col items-center justify-center p-6">
+        <View className="w-24 h-24 rounded-full bg-red-100 flex items-center justify-center mb-6">
+          <CircleAlert size={48} color="#ef4444" />
+        </View>
+        <Text className="text-2xl font-bold text-gray-800 mb-2">游戏结束</Text>
+        <Text className="text-base text-gray-500 mb-6">你破产了，身无分文</Text>
+        
+        <Card className="w-full mb-6">
+          <CardContent className="p-4 text-center">
+            <Text className="block text-sm text-gray-500 mb-2">坚持了</Text>
+            <Text className="block text-4xl font-bold text-amber-500">{user.day}天</Text>
+            <Text className="block text-sm text-gray-500 mt-2">累计收入/支出</Text>
+            <Text className="block text-2xl font-bold text-gray-800">¥{user.totalBalance.toFixed(2)}</Text>
+          </CardContent>
+        </Card>
+        
+        <Button 
+          className="w-full bg-amber-500 hover:bg-amber-600 text-white"
+          onClick={handleRestart}
+        >
+          <RefreshCw size={18} color="#ffffff" className="mr-2" />
+          <Text>重新开始</Text>
+        </Button>
+      </View>
+    );
+  }
+
+  // 渲染游戏主界面
+  return (
+    <View className="min-h-screen bg-gray-50">
+      {/* 顶部状态栏 */}
+      <View className="bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-4 shadow-lg">
+        <View className="flex items-center justify-between mb-3">
+          <View className="flex items-center gap-2">
+            <View className="w-10 h-10 rounded-full bg-white flex items-center justify-center">
+              <User size={20} color="#f59e0b" />
+            </View>
+            <View>
+              <Text className="block text-white font-bold">{user.nickname}</Text>
+              <View className="flex items-center gap-1">
+                <MapPin size={12} color="#fde68a" />
+                <Text className="block text-amber-100 text-xs">{user.location.city}</Text>
+              </View>
+            </View>
+          </View>
+          <View className="flex items-center gap-2 bg-white bg-opacity-20 rounded-full px-3 py-1">
+            <Calendar size={14} color="#ffffff" />
+            <Text className="text-white text-sm">第{user.day}天</Text>
+          </View>
+        </View>
+        
+        {/* 资金展示 */}
+        <View className="bg-white bg-opacity-20 rounded-2xl p-4">
+          <Text className="block text-amber-100 text-sm mb-1">当前资金</Text>
+          <MoneyDisplay balance={user.balance} change={lastChange} />
+        </View>
+      </View>
+
+      {/* 主操作区 */}
+      <View className="p-4">
+        {/* 操作按钮 */}
+        <View className="grid grid-cols-2 gap-3 mb-4">
+          <Button 
+            className="h-20 bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow-lg"
+            onClick={handleGetEvent}
+          >
+            <View className="flex flex-col items-center">
+              <Zap size={28} color="#ffffff" className="mb-1" />
+              <Text className="text-base font-bold">随机事件</Text>
+              <Text className="text-xs opacity-80">点击触发</Text>
+            </View>
+          </Button>
+          
+          <Button 
+            variant="outline"
+            className="h-20 border-2 border-amber-200"
+            onClick={() => setShowRankDialog(true)}
+          >
+            <View className="flex flex-col items-center">
+              <Trophy size={28} color="#f59e0b" className="mb-1" />
+              <Text className="text-base font-bold text-gray-700">排行榜</Text>
+              <Text className="text-xs text-gray-400">查看排名</Text>
+            </View>
+          </Button>
+        </View>
+
+        {/* 快速操作 */}
+        <View className="flex gap-3 mb-4">
+          <Button 
+            variant="outline"
+            className="flex-1 h-14"
+            onClick={handleNextDay}
+          >
+            <View className="flex items-center gap-2">
+              <Clock size={18} color="#6b7280" />
+              <Text className="text-sm text-gray-600">跳过今天</Text>
+            </View>
+          </Button>
+          
+          <Button 
+            variant="outline"
+            className="flex-1 h-14"
+            onClick={() => setShowHistoryDialog(true)}
+          >
+            <View className="flex items-center gap-2">
+              <Crown size={18} color="#f59e0b" />
+              <Text className="text-sm text-gray-600">历史记录</Text>
+            </View>
+          </Button>
+        </View>
+
+        {/* 游戏提示 */}
+        <Card className="bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200">
+          <CardContent className="p-4">
+            <View className="flex items-start gap-3">
+              <View className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
+                <Text className="text-xl">💡</Text>
+              </View>
+              <View>
+                <Text className="block text-sm font-bold text-gray-800 mb-1">游戏提示</Text>
+                <Text className="block text-xs text-gray-600 leading-relaxed">
+                  每天会发生随机事件，每个选择都会影响你的资金变化。明智的选择能让你快速积累财富，成为首富！
+                </Text>
+              </View>
+            </View>
+          </CardContent>
+        </Card>
+
+        {/* 每日结算时间 */}
+        <View className="mt-4 text-center">
+          <Text className="text-xs text-gray-400">
+            每日18:00自动结算排名
+          </Text>
+        </View>
+      </View>
+
+      {/* 事件弹窗 */}
+      <Dialog open={showEventDialog} onOpenChange={setShowEventDialog}>
+        <View className="p-4">
+          {currentEvent && (
+            <EventCard 
+              event={currentEvent} 
+              onSelectOption={handleSelectOption}
+            />
+          )}
+        </View>
+      </Dialog>
+
+      {/* 排名弹窗 */}
+      <Dialog open={showRankDialog} onOpenChange={setShowRankDialog}>
+        <View className="p-4">
+          <Text className="block text-xl font-bold text-center mb-4 text-gray-800">排行榜</Text>
+          
+          <View className="flex gap-2 mb-4">
+            <RankingCard
+              title="城市"
+              icon={Building}
+              rank={useGameStore.getState().ranking?.cityRank || 1}
+              total={useGameStore.getState().ranking?.cityTotal || 100}
+              richest={useGameStore.getState().ranking?.cityRichest}
+            />
+            <RankingCard
+              title="省份"
+              icon={MapPin}
+              rank={useGameStore.getState().ranking?.provinceRank || 1}
+              total={useGameStore.getState().ranking?.provinceTotal || 1000}
+              richest={useGameStore.getState().ranking?.provinceRichest}
+            />
+          </View>
+          
+          <Card>
+            <CardContent className="p-3">
+              <View className="flex items-center gap-2 mb-2">
+                <Crown size={16} color="#eab308" />
+                <Text className="block text-sm font-medium text-gray-700">全国排名</Text>
+              </View>
+              <Text className="block text-2xl font-bold text-gray-800">
+                第{useGameStore.getState().ranking?.nationalRank || 1}名
+                <Text className="text-sm font-normal text-gray-400"> / 共{useGameStore.getState().ranking?.nationalTotal || 10000}人</Text>
+              </Text>
+              {useGameStore.getState().ranking?.nationalRichest && (
+                <View className="mt-2 pt-2 border-t border-gray-100">
+                  <Text className="block text-xs text-gray-400">全国首富</Text>
+                  <Text className="block text-sm font-bold text-yellow-600">
+                    {useGameStore.getState().ranking?.nationalRichest?.nickname}
+                  </Text>
+                  <Text className="block text-lg font-bold text-amber-500">
+                    ¥{useGameStore.getState().ranking?.nationalRichest?.balance.toFixed(2)}
+                  </Text>
+                </View>
+              )}
+            </CardContent>
+          </Card>
+          
+          <Button 
+            className="w-full mt-4 bg-amber-500 hover:bg-amber-600 text-white"
+            onClick={() => setShowRankDialog(false)}
+          >
+            <Text>知道了</Text>
+          </Button>
+        </View>
+      </Dialog>
+
+      {/* 历史记录弹窗 */}
+      <Dialog open={showHistoryDialog} onOpenChange={setShowHistoryDialog}>
+        <View className="p-4 max-h-96">
+          <Text className="block text-xl font-bold text-center mb-4 text-gray-800">历史记录</Text>
+          
+          <ScrollView scrollY className="max-h-72">
+            {user.dailyRecords.length === 0 ? (
+              <View className="text-center py-8">
+                <Text className="block text-gray-400">还没有记录，开始你的第一天吧！</Text>
+              </View>
+            ) : (
+              user.dailyRecords.slice().reverse().map((record, index) => (
+                <DailyRecordCard key={index} record={record} />
+              ))
+            )}
+          </ScrollView>
+          
+          <Button 
+            className="w-full mt-4 bg-amber-500 hover:bg-amber-600 text-white"
+            onClick={() => setShowHistoryDialog(false)}
+          >
+            <Text>关闭</Text>
+          </Button>
+        </View>
+      </Dialog>
     </View>
   );
 };
