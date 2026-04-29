@@ -1,4 +1,4 @@
-// 中国省市区数据 - 带详细区域信息
+// 中国省市区数据 - 带详细区域信息（严格按城市归属）
 export interface District {
   name: string;
   type: 'district' | 'business' | 'scenic' | 'street';
@@ -18,6 +18,8 @@ export interface Province {
 
 // 兼容性别名
 export type { Province as ProvinceData, City as CityData };
+
+// ========== 各城市区域数据 ==========
 
 // 北京市
 const beijingDistricts: District[] = [
@@ -163,7 +165,7 @@ const xianDistricts: District[] = [
   { name: '大悦城', type: 'business' },
 ];
 
-// 重庆市
+// 重庆市 - 单一城市模式
 const chongqingDistricts: District[] = [
   { name: '解放碑商圈', type: 'business' },
   { name: '洪崖洞', type: 'scenic' },
@@ -195,7 +197,271 @@ const suzhouDistricts: District[] = [
   { name: '苏州中心', type: 'business' },
 ];
 
-// 默认区域生成函数
+// 天津市
+const tianjinDistricts: District[] = [
+  { name: '滨江道商业街', type: 'street' },
+  { name: '小白楼商圈', type: 'business' },
+  { name: '五大道', type: 'street' },
+  { name: '天津古文化街', type: 'street' },
+  { name: '意式风情区', type: 'scenic' },
+  { name: '天津之眼', type: 'scenic' },
+  { name: '和平区', type: 'district' },
+  { name: '河西区', type: 'district' },
+];
+
+// 石家庄市
+const shijiazhuangDistricts: District[] = [
+  { name: '中山路步行街', type: 'street' },
+  { name: '北国商城', type: 'business' },
+  { name: '正定古城', type: 'scenic' },
+  { name: '裕华区', type: 'district' },
+  { name: '长安区', type: 'district' },
+  { name: '民心河步道', type: 'scenic' },
+  { name: '万达广场(石家庄)', type: 'business' },
+  { name: '火车北站商圈', type: 'business' },
+];
+
+// 太原市
+const taiyuanDistricts: District[] = [
+  { name: '柳巷商业街', type: 'street' },
+  { name: '长风商务区', type: 'business' },
+  { name: '晋祠博物馆', type: 'scenic' },
+  { name: '迎泽区', type: 'district' },
+  { name: '杏花岭区', type: 'district' },
+  { name: '食品街', type: 'street' },
+  { name: '万象城(太原)', type: 'business' },
+  { name: '汾河公园', type: 'scenic' },
+];
+
+// 沈阳市
+const shenyangDistricts: District[] = [
+  { name: '中街步行街', type: 'street' },
+  { name: '太原街商圈', type: 'business' },
+  { name: '沈阳故宫', type: 'scenic' },
+  { name: '沈河区', type: 'district' },
+  { name: '和平区(沈阳)', type: 'district' },
+  { name: '铁西广场', type: 'business' },
+  { name: '张氏帅府', type: 'scenic' },
+  { name: '奥体中心', type: 'scenic' },
+];
+
+// 大连市
+const dalianDistricts: District[] = [
+  { name: '星海广场', type: 'scenic' },
+  { name: '老虎滩海洋公园', type: 'scenic' },
+  { name: '俄罗斯风情街', type: 'street' },
+  { name: '中山区(大连)', type: 'district' },
+  { name: '西岗区', type: 'district' },
+  { name: '青泥洼桥商圈', type: 'business' },
+  { name: '金石滩', type: 'scenic' },
+  { name: '万达广场(大连)', type: 'business' },
+];
+
+// 青岛市
+const qingdaoDistricts: District[] = [
+  { name: '栈桥', type: 'scenic' },
+  { name: '五四广场', type: 'scenic' },
+  { name: '台东步行街', type: 'street' },
+  { name: '市南区(青岛)', type: 'district' },
+  { name: '崂山区(青岛)', type: 'district' },
+  { name: '劈柴院', type: 'street' },
+  { name: '金沙滩', type: 'scenic' },
+  { name: '万象城(青岛)', type: 'business' },
+];
+
+// 长沙市
+const changshaDistricts: District[] = [
+  { name: '五一广场商圈', type: 'business' },
+  { name: '太平老街', type: 'street' },
+  { name: '坡子街', type: 'street' },
+  { name: '橘子洲', type: 'scenic' },
+  { name: '岳麓山', type: 'scenic' },
+  { name: '天心区', type: 'district' },
+  { name: '芙蓉区', type: 'district' },
+  { name: '黄兴路步行街', type: 'street' },
+];
+
+// 郑州市
+const zhengzhouDistricts: District[] = [
+  { name: '二七广场商圈', type: 'business' },
+  { name: '德化街', type: 'street' },
+  { name: '大卫城', type: 'business' },
+  { name: '金水区', type: 'district' },
+  { name: '中原区', type: 'district' },
+  { name: '如意湖', type: 'scenic' },
+  { name: '郑州东站商圈', type: 'business' },
+  { name: '少林寺', type: 'scenic' },
+];
+
+// 东莞市
+const dongguanDistricts: District[] = [
+  { name: '鸿福路商圈', type: 'business' },
+  { name: '东城酒吧街', type: 'street' },
+  { name: '南城步行街', type: 'street' },
+  { name: '松山湖', type: 'scenic' },
+  { name: '长安镇', type: 'district' },
+  { name: '虎门镇', type: 'district' },
+  { name: '万江街道', type: 'district' },
+  { name: '东莞CBD', type: 'business' },
+];
+
+// 佛山市
+const foshanDistricts: District[] = [
+  { name: '祖庙商圈', type: 'business' },
+  { name: '岭南天地', type: 'street' },
+  { name: '千灯湖', type: 'scenic' },
+  { name: '顺德区', type: 'district' },
+  { name: '南海区', type: 'district' },
+  { name: '清晖园', type: 'scenic' },
+  { name: '西樵山', type: 'scenic' },
+  { name: '佛山新城', type: 'business' },
+];
+
+// 珠海市
+const zhuhaiDistricts: District[] = [
+  { name: '拱北口岸', type: 'district' },
+  { name: '情侣路', type: 'scenic' },
+  { name: '珠海渔女', type: 'scenic' },
+  { name: '横琴新区', type: 'district' },
+  { name: '香洲区', type: 'district' },
+  { name: '吉大商圈', type: 'business' },
+  { name: '长隆海洋王国', type: 'scenic' },
+  { name: '日月贝', type: 'scenic' },
+];
+
+// 厦门市
+const xiamenDistricts: District[] = [
+  { name: '中山路步行街(厦门)', type: 'street' },
+  { name: '鼓浪屿', type: 'scenic' },
+  { name: '曾厝垵', type: 'street' },
+  { name: '厦门大学', type: 'scenic' },
+  { name: '思明区', type: 'district' },
+  { name: '湖里区', type: 'district' },
+  { name: '沙坡尾', type: 'street' },
+  { name: '观音山商务区', type: 'business' },
+];
+
+// 昆明市
+const kunmingDistricts: District[] = [
+  { name: '南屏步行街', type: 'street' },
+  { name: '翠湖公园', type: 'scenic' },
+  { name: '正义坊商圈', type: 'business' },
+  { name: '五华区', type: 'district' },
+  { name: '盘龙区', type: 'district' },
+  { name: '石林景区', type: 'scenic' },
+  { name: '滇池海埂', type: 'scenic' },
+  { name: '官渡古镇', type: 'street' },
+];
+
+// 南昌市
+const nanchangDistricts: District[] = [
+  { name: '滕王阁', type: 'scenic' },
+  { name: '秋水广场', type: 'scenic' },
+  { name: '中山路步行街(南昌)', type: 'street' },
+  { name: '红谷滩新区', type: 'district' },
+  { name: '东湖区(南昌)', type: 'district' },
+  { name: '绳金塔美食街', type: 'street' },
+  { name: '八一广场', type: 'scenic' },
+  { name: '万达广场(南昌)', type: 'business' },
+];
+
+// 济南市
+const jinanDistricts: District[] = [
+  { name: '泉城路商圈', type: 'business' },
+  { name: '芙蓉街', type: 'street' },
+  { name: '大明湖', type: 'scenic' },
+  { name: '趵突泉', type: 'scenic' },
+  { name: '历下区', type: 'district' },
+  { name: '市中区(济南)', type: 'district' },
+  { name: '宽厚里', type: 'street' },
+  { name: '恒隆广场', type: 'business' },
+];
+
+// 福州市
+const fuzhouDistricts: District[] = [
+  { name: '三坊七巷', type: 'street' },
+  { name: '东街口商圈', type: 'business' },
+  { name: '上下杭', type: 'street' },
+  { name: '鼓山', type: 'scenic' },
+  { name: '台江区', type: 'district' },
+  { name: '仓山区', type: 'district' },
+  { name: '西湖公园', type: 'scenic' },
+  { name: '五四北泰禾', type: 'business' },
+];
+
+// 贵阳市
+const guiyangDistricts: District[] = [
+  { name: '花果园商圈', type: 'business' },
+  { name: '甲秀楼', type: 'scenic' },
+  { name: '黔灵山公园', type: 'scenic' },
+  { name: '南明区', type: 'district' },
+  { name: '云岩区', type: 'district' },
+  { name: '喷水池商圈', type: 'business' },
+  { name: '青岩古镇', type: 'scenic' },
+  { name: '逸天城', type: 'business' },
+];
+
+// 南宁市
+const nanningDistricts: District[] = [
+  { name: '朝阳广场商圈', type: 'business' },
+  { name: '中山路美食街', type: 'street' },
+  { name: '东盟商务区', type: 'business' },
+  { name: '青秀区', type: 'district' },
+  { name: '兴宁区', type: 'district' },
+  { name: '南湖公园', type: 'scenic' },
+  { name: '埌东CBD', type: 'business' },
+  { name: '南宁动物园', type: 'scenic' },
+];
+
+// 哈尔滨市
+const haerbinDistricts: District[] = [
+  { name: '中央大街(哈尔滨)', type: 'street' },
+  { name: '防洪纪念塔', type: 'scenic' },
+  { name: '索菲亚教堂', type: 'scenic' },
+  { name: '道里区', type: 'district' },
+  { name: '南岗区', type: 'district' },
+  { name: '秋林商圈', type: 'business' },
+  { name: '冰雪大世界', type: 'scenic' },
+  { name: '防洪江畔', type: 'scenic' },
+];
+
+// 长春市
+const changchunDistricts: District[] = [
+  { name: '重庆路商圈(长春)', type: 'business' },
+  { name: '桂林路步行街', type: 'street' },
+  { name: '这有山商场', type: 'business' },
+  { name: '朝阳区(长春)', type: 'district' },
+  { name: '南关区', type: 'district' },
+  { name: '伪满皇宫', type: 'scenic' },
+  { name: '净月潭', type: 'scenic' },
+  { name: '红旗街商圈', type: 'business' },
+];
+
+// 兰州市
+const lanzhouDistricts: District[] = [
+  { name: '西关十字商圈', type: 'business' },
+  { name: '正宁路夜市', type: 'street' },
+  { name: '东方红广场', type: 'district' },
+  { name: '城关区(兰州)', type: 'district' },
+  { name: '七里河区', type: 'district' },
+  { name: '黄河风情线', type: 'scenic' },
+  { name: '中山桥', type: 'scenic' },
+  { name: '兰州中心', type: 'business' },
+];
+
+// 乌鲁木齐市
+const wulumuqiDistricts: District[] = [
+  { name: '大巴扎(乌鲁木齐)', type: 'street' },
+  { name: '中山路商圈(乌鲁木齐)', type: 'business' },
+  { name: '天山区', type: 'district' },
+  { name: '沙依巴克区', type: 'district' },
+  { name: '红山公园', type: 'scenic' },
+  { name: '友好路商圈', type: 'business' },
+  { name: '新疆民街', type: 'street' },
+  { name: '国际大巴扎', type: 'scenic' },
+];
+
+// ========== 默认区域生成函数 ==========
 const generateDefaultDistricts = (cityName: string): District[] => {
   return [
     { name: `${cityName}市中心`, type: 'business' },
@@ -209,246 +475,7 @@ const generateDefaultDistricts = (cityName: string): District[] => {
   ];
 };
 
-// 城市特定区域映射
-const citySpecificDistricts: Record<string, District[]> = {
-  '北京市': beijingDistricts,
-  '天津市': [
-    { name: '滨江道商业街', type: 'street' },
-    { name: '小白楼商圈', type: 'business' },
-    { name: '五大道', type: 'street' },
-    { name: '天津古文化街', type: 'street' },
-    { name: '意式风情区', type: 'scenic' },
-    { name: '天津之眼', type: 'scenic' },
-    { name: '和平区', type: 'district' },
-    { name: '河西区', type: 'district' },
-  ],
-  '上海市': shanghaiDistricts,
-  '广州市': guangzhouDistricts,
-  '深圳市': shenzhenDistricts,
-  '杭州市': hangzhouDistricts,
-  '成都市': chengduDistricts,
-  '南京市': nanjingDistricts,
-  '武汉市': wuhanDistricts,
-  '西安市': xianDistricts,
-  '重庆市': chongqingDistricts,
-  '苏州市': suzhouDistricts,
-  '石家庄市': [
-    { name: '中山路步行街', type: 'street' },
-    { name: '北国商城', type: 'business' },
-    { name: '正定古城', type: 'scenic' },
-    { name: '裕华区', type: 'district' },
-    { name: '长安区', type: 'district' },
-    { name: '民心河步道', type: 'scenic' },
-    { name: '万达广场', type: 'business' },
-    { name: '火车北站商圈', type: 'business' },
-  ],
-  '太原市': [
-    { name: '柳巷商业街', type: 'street' },
-    { name: '长风商务区', type: 'business' },
-    { name: '晋祠博物馆', type: 'scenic' },
-    { name: '迎泽区', type: 'district' },
-    { name: '杏花岭区', type: 'district' },
-    { name: '食品街', type: 'street' },
-    { name: '万象城', type: 'business' },
-    { name: '汾河公园', type: 'scenic' },
-  ],
-  '沈阳市': [
-    { name: '中街步行街', type: 'street' },
-    { name: '太原街商圈', type: 'business' },
-    { name: '沈阳故宫', type: 'scenic' },
-    { name: '沈河区', type: 'district' },
-    { name: '和平区', type: 'district' },
-    { name: '铁西广场', type: 'business' },
-    { name: '张氏帅府', type: 'scenic' },
-    { name: '奥体中心', type: 'scenic' },
-  ],
-  '大连市': [
-    { name: '星海广场', type: 'scenic' },
-    { name: '老虎滩海洋公园', type: 'scenic' },
-    { name: '俄罗斯风情街', type: 'street' },
-    { name: '中山区', type: 'district' },
-    { name: '西岗区', type: 'district' },
-    { name: '青泥洼桥商圈', type: 'business' },
-    { name: '金石滩', type: 'scenic' },
-    { name: '万达广场', type: 'business' },
-  ],
-  '青岛市': [
-    { name: '栈桥', type: 'scenic' },
-    { name: '五四广场', type: 'scenic' },
-    { name: '台东步行街', type: 'street' },
-    { name: '市南区', type: 'district' },
-    { name: '崂山区', type: 'district' },
-    { name: '劈柴院', type: 'street' },
-    { name: '金沙滩', type: 'scenic' },
-    { name: '万象城', type: 'business' },
-  ],
-  '长沙市': [
-    { name: '五一广场商圈', type: 'business' },
-    { name: '太平老街', type: 'street' },
-    { name: '坡子街', type: 'street' },
-    { name: '橘子洲', type: 'scenic' },
-    { name: '岳麓山', type: 'scenic' },
-    { name: '天心区', type: 'district' },
-    { name: '芙蓉区', type: 'district' },
-    { name: '黄兴路步行街', type: 'street' },
-  ],
-  '郑州市': [
-    { name: '二七广场商圈', type: 'business' },
-    { name: '德化街', type: 'street' },
-    { name: '大卫城', type: 'business' },
-    { name: '金水区', type: 'district' },
-    { name: '中原区', type: 'district' },
-    { name: '如意湖', type: 'scenic' },
-    { name: '郑州东站商圈', type: 'business' },
-    { name: '少林寺', type: 'scenic' },
-  ],
-  '东莞市': [
-    { name: '鸿福路商圈', type: 'business' },
-    { name: '东城酒吧街', type: 'street' },
-    { name: '南城步行街', type: 'street' },
-    { name: '松山湖', type: 'scenic' },
-    { name: '长安镇', type: 'district' },
-    { name: '虎门镇', type: 'district' },
-    { name: '万江街道', type: 'district' },
-    { name: '东莞CBD', type: 'business' },
-  ],
-  '佛山市': [
-    { name: '祖庙商圈', type: 'business' },
-    { name: '岭南天地', type: 'street' },
-    { name: '千灯湖', type: 'scenic' },
-    { name: '顺德区', type: 'district' },
-    { name: '南海区', type: 'district' },
-    { name: '清晖园', type: 'scenic' },
-    { name: '西樵山', type: 'scenic' },
-    { name: '佛山新城', type: 'business' },
-  ],
-  '珠海市': [
-    { name: '拱北口岸', type: 'district' },
-    { name: '情侣路', type: 'scenic' },
-    { name: '珠海渔女', type: 'scenic' },
-    { name: '横琴新区', type: 'district' },
-    { name: '香洲区', type: 'district' },
-    { name: '吉大商圈', type: 'business' },
-    { name: '长隆海洋王国', type: 'scenic' },
-    { name: '日月贝', type: 'scenic' },
-  ],
-  '厦门市': [
-    { name: '中山路步行街', type: 'street' },
-    { name: '鼓浪屿', type: 'scenic' },
-    { name: '曾厝垵', type: 'street' },
-    { name: '厦门大学', type: 'scenic' },
-    { name: '思明区', type: 'district' },
-    { name: '湖里区', type: 'district' },
-    { name: '沙坡尾', type: 'street' },
-    { name: '观音山商务区', type: 'business' },
-  ],
-  '昆明市': [
-    { name: '南屏步行街', type: 'street' },
-    { name: '翠湖公园', type: 'scenic' },
-    { name: '正义坊商圈', type: 'business' },
-    { name: '五华区', type: 'district' },
-    { name: '盘龙区', type: 'district' },
-    { name: '石林景区', type: 'scenic' },
-    { name: '滇池海埂', type: 'scenic' },
-    { name: '官渡古镇', type: 'street' },
-  ],
-  '南昌市': [
-    { name: '滕王阁', type: 'scenic' },
-    { name: '秋水广场', type: 'scenic' },
-    { name: '中山路步行街', type: 'street' },
-    { name: '红谷滩新区', type: 'district' },
-    { name: '东湖区', type: 'district' },
-    { name: '绳金塔美食街', type: 'street' },
-    { name: '八一广场', type: 'scenic' },
-    { name: '万达广场', type: 'business' },
-  ],
-  '济南市': [
-    { name: '泉城路商圈', type: 'business' },
-    { name: '芙蓉街', type: 'street' },
-    { name: '大明湖', type: 'scenic' },
-    { name: '趵突泉', type: 'scenic' },
-    { name: '历下区', type: 'district' },
-    { name: '市中区', type: 'district' },
-    { name: '宽厚里', type: 'street' },
-    { name: '恒隆广场', type: 'business' },
-  ],
-  '福州市': [
-    { name: '三坊七巷', type: 'street' },
-    { name: '东街口商圈', type: 'business' },
-    { name: '上下杭', type: 'street' },
-    { name: '鼓山', type: 'scenic' },
-    { name: '台江区', type: 'district' },
-    { name: '仓山区', type: 'district' },
-    { name: '西湖公园', type: 'scenic' },
-    { name: '五四北泰禾', type: 'business' },
-  ],
-  '贵阳市': [
-    { name: '花果园商圈', type: 'business' },
-    { name: '甲秀楼', type: 'scenic' },
-    { name: '黔灵山公园', type: 'scenic' },
-    { name: '南明区', type: 'district' },
-    { name: '云岩区', type: 'district' },
-    { name: '喷水池商圈', type: 'business' },
-    { name: '青岩古镇', type: 'scenic' },
-    { name: '逸天城', type: 'business' },
-  ],
-  '南宁市': [
-    { name: '朝阳广场商圈', type: 'business' },
-    { name: '中山路美食街', type: 'street' },
-    { name: '东盟商务区', type: 'business' },
-    { name: '青秀区', type: 'district' },
-    { name: '兴宁区', type: 'district' },
-    { name: '南湖公园', type: 'scenic' },
-    { name: '埌东CBD', type: 'business' },
-    { name: '南宁动物园', type: 'scenic' },
-  ],
-  '哈尔滨市': [
-    { name: '中央大街', type: 'street' },
-    { name: '防洪纪念塔', type: 'scenic' },
-    { name: '索菲亚教堂', type: 'scenic' },
-    { name: '道里区', type: 'district' },
-    { name: '南岗区', type: 'district' },
-    { name: '秋林商圈', type: 'business' },
-    { name: '冰雪大世界', type: 'scenic' },
-    { name: '防洪江畔', type: 'scenic' },
-  ],
-  '长春市': [
-    { name: '重庆路商圈', type: 'business' },
-    { name: '桂林路步行街', type: 'street' },
-    { name: '这有山商场', type: 'business' },
-    { name: '朝阳区', type: 'district' },
-    { name: '南关区', type: 'district' },
-    { name: '伪满皇宫', type: 'scenic' },
-    { name: '净月潭', type: 'scenic' },
-    { name: '红旗街商圈', type: 'business' },
-  ],
-  '兰州市': [
-    { name: '西关十字商圈', type: 'business' },
-    { name: '正宁路夜市', type: 'street' },
-    { name: '东方红广场', type: 'district' },
-    { name: '城关区', type: 'district' },
-    { name: '七里河区', type: 'district' },
-    { name: '黄河风情线', type: 'scenic' },
-    { name: '中山桥', type: 'scenic' },
-    { name: '兰州中心', type: 'business' },
-  ],
-  '乌鲁木齐市': [
-    { name: '大巴扎', type: 'street' },
-    { name: '中山路商圈', type: 'business' },
-    { name: '天山区', type: 'district' },
-    { name: '沙依巴克区', type: 'district' },
-    { name: '红山公园', type: 'scenic' },
-    { name: '友好路商圈', type: 'business' },
-    { name: '新疆民街', type: 'street' },
-    { name: '国际大巴扎', type: 'scenic' },
-  ],
-};
-
-// 获取城市区域
-export const getCityDistricts = (cityName: string): District[] => {
-  return citySpecificDistricts[cityName] || generateDefaultDistricts(cityName);
-};
-
+// ========== 导出省份数据 ==========
 export const chinaProvinces: Province[] = [
   {
     name: "北京市",
@@ -461,7 +488,7 @@ export const chinaProvinces: Province[] = [
     name: "天津市",
     code: "120000",
     cities: [
-      { name: "天津市", code: "120100", districts: citySpecificDistricts['天津市'] }
+      { name: "天津市", code: "120100", districts: tianjinDistricts }
     ]
   },
   {
@@ -475,14 +502,7 @@ export const chinaProvinces: Province[] = [
     name: "重庆市",
     code: "500000",
     cities: [
-      { name: "渝中区", code: "500103", districts: chongqingDistricts.filter(d => ['解放碑商圈', '洪崖洞', '长江索道', '渝中区'].includes(d.name)) },
-      { name: "江北区", code: "500105", districts: chongqingDistricts.filter(d => ['观音桥商圈', '江北区'].includes(d.name)) },
-      { name: "沙坪坝区", code: "500106", districts: chongqingDistricts.filter(d => ['三峡广场', '沙坪坝区'].includes(d.name)) },
-      { name: "南岸区", code: "500108", districts: chongqingDistricts.filter(d => ['南山一棵树', '南岸区', '鹅岭二厂'].includes(d.name)) },
-      { name: "九龙坡区", code: "500107", districts: [...chongqingDistricts.slice(0, 5), { name: '九龙坡区', type: 'district' as const }] },
-      { name: "涪陵区", code: "500102", districts: [...chongqingDistricts.slice(0, 5), { name: '涪陵区', type: 'district' as const }] },
-      { name: "渝北区", code: "500112", districts: [...chongqingDistricts.slice(0, 5), { name: '渝北区', type: 'district' as const }] },
-      { name: "巴南区", code: "500113", districts: [...chongqingDistricts.slice(0, 5), { name: '巴南区', type: 'district' as const }] },
+      { name: "重庆市", code: "500100", districts: chongqingDistricts }
     ]
   },
   {
@@ -491,9 +511,9 @@ export const chinaProvinces: Province[] = [
     cities: [
       { name: "广州市", code: "440101", districts: guangzhouDistricts },
       { name: "深圳市", code: "440301", districts: shenzhenDistricts },
-      { name: "东莞市", code: "441901", districts: citySpecificDistricts['东莞市'] },
-      { name: "佛山市", code: "440601", districts: citySpecificDistricts['佛山市'] },
-      { name: "珠海市", code: "440401", districts: citySpecificDistricts['珠海市'] },
+      { name: "东莞市", code: "441901", districts: dongguanDistricts },
+      { name: "佛山市", code: "440601", districts: foshanDistricts },
+      { name: "珠海市", code: "440401", districts: zhuhaiDistricts },
       { name: "汕头市", code: "440501", districts: generateDefaultDistricts('汕头') },
       { name: "湛江市", code: "440801", districts: generateDefaultDistricts('湛江') },
       { name: "中山市", code: "442001", districts: generateDefaultDistricts('中山') },
@@ -599,7 +619,7 @@ export const chinaProvinces: Province[] = [
     name: "湖南省",
     code: "430000",
     cities: [
-      { name: "长沙市", code: "430101", districts: citySpecificDistricts['长沙市'] },
+      { name: "长沙市", code: "430101", districts: changshaDistricts },
       { name: "株洲市", code: "430201", districts: generateDefaultDistricts('株洲') },
       { name: "湘潭市", code: "430301", districts: generateDefaultDistricts('湘潭') },
       { name: "衡阳市", code: "430401", districts: generateDefaultDistricts('衡阳') },
@@ -618,8 +638,8 @@ export const chinaProvinces: Province[] = [
     name: "山东省",
     code: "370000",
     cities: [
-      { name: "济南市", code: "370101", districts: citySpecificDistricts['济南市'] },
-      { name: "青岛市", code: "370201", districts: citySpecificDistricts['青岛市'] },
+      { name: "济南市", code: "370101", districts: jinanDistricts },
+      { name: "青岛市", code: "370201", districts: qingdaoDistricts },
       { name: "淄博市", code: "370301", districts: generateDefaultDistricts('淄博') },
       { name: "枣庄市", code: "370401", districts: generateDefaultDistricts('枣庄') },
       { name: "东营市", code: "370501", districts: generateDefaultDistricts('东营') },
@@ -640,7 +660,7 @@ export const chinaProvinces: Province[] = [
     name: "河南省",
     code: "410000",
     cities: [
-      { name: "郑州市", code: "410101", districts: citySpecificDistricts['郑州市'] },
+      { name: "郑州市", code: "410101", districts: zhengzhouDistricts },
       { name: "开封市", code: "410201", districts: generateDefaultDistricts('开封') },
       { name: "洛阳市", code: "410301", districts: generateDefaultDistricts('洛阳') },
       { name: "平顶山市", code: "410401", districts: generateDefaultDistricts('平顶山') },
@@ -663,8 +683,8 @@ export const chinaProvinces: Province[] = [
     name: "辽宁省",
     code: "210000",
     cities: [
-      { name: "沈阳市", code: "210101", districts: citySpecificDistricts['沈阳市'] },
-      { name: "大连市", code: "210201", districts: citySpecificDistricts['大连市'] },
+      { name: "沈阳市", code: "210101", districts: shenyangDistricts },
+      { name: "大连市", code: "210201", districts: dalianDistricts },
       { name: "鞍山市", code: "210301", districts: generateDefaultDistricts('鞍山') },
       { name: "抚顺市", code: "210401", districts: generateDefaultDistricts('抚顺') },
       { name: "本溪市", code: "210501", districts: generateDefaultDistricts('本溪') },
@@ -683,8 +703,8 @@ export const chinaProvinces: Province[] = [
     name: "福建省",
     code: "350000",
     cities: [
-      { name: "福州市", code: "350101", districts: citySpecificDistricts['福州市'] },
-      { name: "厦门市", code: "350201", districts: citySpecificDistricts['厦门市'] },
+      { name: "福州市", code: "350101", districts: fuzhouDistricts },
+      { name: "厦门市", code: "350201", districts: xiamenDistricts },
       { name: "莆田市", code: "350301", districts: generateDefaultDistricts('莆田') },
       { name: "三明市", code: "350401", districts: generateDefaultDistricts('三明') },
       { name: "泉州市", code: "350501", districts: generateDefaultDistricts('泉州') },
@@ -720,7 +740,7 @@ export const chinaProvinces: Province[] = [
     name: "江西省",
     code: "360000",
     cities: [
-      { name: "南昌市", code: "360101", districts: citySpecificDistricts['南昌市'] },
+      { name: "南昌市", code: "360101", districts: nanchangDistricts },
       { name: "景德镇市", code: "360201", districts: generateDefaultDistricts('景德镇') },
       { name: "萍乡市", code: "360301", districts: generateDefaultDistricts('萍乡') },
       { name: "九江市", code: "360401", districts: generateDefaultDistricts('九江') },
@@ -737,7 +757,7 @@ export const chinaProvinces: Province[] = [
     name: "云南省",
     code: "530000",
     cities: [
-      { name: "昆明市", code: "530101", districts: citySpecificDistricts['昆明市'] },
+      { name: "昆明市", code: "530101", districts: kunmingDistricts },
       { name: "曲靖市", code: "530301", districts: generateDefaultDistricts('曲靖') },
       { name: "玉溪市", code: "530401", districts: generateDefaultDistricts('玉溪') },
       { name: "保山市", code: "530501", districts: generateDefaultDistricts('保山') },
@@ -751,7 +771,7 @@ export const chinaProvinces: Province[] = [
     name: "贵州省",
     code: "520000",
     cities: [
-      { name: "贵阳市", code: "520101", districts: citySpecificDistricts['贵阳市'] },
+      { name: "贵阳市", code: "520101", districts: guiyangDistricts },
       { name: "六盘水市", code: "520201", districts: generateDefaultDistricts('六盘水') },
       { name: "遵义市", code: "520301", districts: generateDefaultDistricts('遵义') },
       { name: "安顺市", code: "520401", districts: generateDefaultDistricts('安顺') },
@@ -766,7 +786,7 @@ export const chinaProvinces: Province[] = [
     name: "广西壮族自治区",
     code: "450000",
     cities: [
-      { name: "南宁市", code: "450101", districts: citySpecificDistricts['南宁市'] },
+      { name: "南宁市", code: "450101", districts: nanningDistricts },
       { name: "柳州市", code: "450201", districts: generateDefaultDistricts('柳州') },
       { name: "桂林市", code: "450301", districts: generateDefaultDistricts('桂林') },
       { name: "梧州市", code: "450401", districts: generateDefaultDistricts('梧州') },
@@ -786,7 +806,7 @@ export const chinaProvinces: Province[] = [
     name: "黑龙江省",
     code: "230000",
     cities: [
-      { name: "哈尔滨市", code: "230101", districts: citySpecificDistricts['哈尔滨市'] },
+      { name: "哈尔滨市", code: "230101", districts: haerbinDistricts },
       { name: "齐齐哈尔市", code: "230201", districts: generateDefaultDistricts('齐齐哈尔') },
       { name: "鸡西市", code: "230301", districts: generateDefaultDistricts('鸡西') },
       { name: "鹤岗市", code: "230401", districts: generateDefaultDistricts('鹤岗') },
@@ -804,7 +824,7 @@ export const chinaProvinces: Province[] = [
     name: "吉林省",
     code: "220000",
     cities: [
-      { name: "长春市", code: "220101", districts: citySpecificDistricts['长春市'] },
+      { name: "长春市", code: "220101", districts: changchunDistricts },
       { name: "吉林市", code: "220201", districts: generateDefaultDistricts('吉林') },
       { name: "四平市", code: "220301", districts: generateDefaultDistricts('四平') },
       { name: "辽源市", code: "220401", districts: generateDefaultDistricts('辽源') },
@@ -819,7 +839,7 @@ export const chinaProvinces: Province[] = [
     name: "河北省",
     code: "130000",
     cities: [
-      { name: "石家庄市", code: "130101", districts: citySpecificDistricts['石家庄市'] },
+      { name: "石家庄市", code: "130101", districts: shijiazhuangDistricts },
       { name: "唐山市", code: "130201", districts: generateDefaultDistricts('唐山') },
       { name: "秦皇岛市", code: "130301", districts: generateDefaultDistricts('秦皇岛') },
       { name: "邯郸市", code: "130401", districts: generateDefaultDistricts('邯郸') },
@@ -836,7 +856,7 @@ export const chinaProvinces: Province[] = [
     name: "山西省",
     code: "140000",
     cities: [
-      { name: "太原市", code: "140101", districts: citySpecificDistricts['太原市'] },
+      { name: "太原市", code: "140101", districts: taiyuanDistricts },
       { name: "大同市", code: "140201", districts: generateDefaultDistricts('大同') },
       { name: "阳泉市", code: "140301", districts: generateDefaultDistricts('阳泉') },
       { name: "长治市", code: "140401", districts: generateDefaultDistricts('长治') },
@@ -878,7 +898,7 @@ export const chinaProvinces: Province[] = [
     name: "甘肃省",
     code: "620000",
     cities: [
-      { name: "兰州市", code: "620101", districts: citySpecificDistricts['兰州市'] },
+      { name: "兰州市", code: "620101", districts: lanzhouDistricts },
       { name: "嘉峪关市", code: "620201", districts: generateDefaultDistricts('嘉峪关') },
       { name: "金昌市", code: "620301", districts: generateDefaultDistricts('金昌') },
       { name: "白银市", code: "620401", districts: generateDefaultDistricts('白银') },
@@ -896,76 +916,21 @@ export const chinaProvinces: Province[] = [
     name: "新疆维吾尔自治区",
     code: "650000",
     cities: [
-      { name: "乌鲁木齐市", code: "650101", districts: citySpecificDistricts['乌鲁木齐市'] },
+      { name: "乌鲁木齐市", code: "650101", districts: wulumuqiDistricts },
       { name: "克拉玛依市", code: "650201", districts: generateDefaultDistricts('克拉玛依') },
-      { name: "吐鲁番市", code: "650402", districts: generateDefaultDistricts('吐鲁番') },
-      { name: "哈密市", code: "650502", districts: generateDefaultDistricts('哈密') },
-      { name: "昌吉回族自治州", code: "652301", districts: generateDefaultDistricts('昌吉') },
-      { name: "博尔塔拉蒙古自治州", code: "652701", districts: generateDefaultDistricts('博尔塔拉') },
-      { name: "巴音郭楞蒙古自治州", code: "652801", districts: generateDefaultDistricts('巴音郭楞') },
-      { name: "阿克苏地区", code: "652901", districts: generateDefaultDistricts('阿克苏') },
-      { name: "克孜勒苏柯尔克孜自治州", code: "653001", districts: generateDefaultDistricts('克孜勒苏') },
-      { name: "喀什地区", code: "653101", districts: generateDefaultDistricts('喀什') },
-      { name: "和田地区", code: "653201", districts: generateDefaultDistricts('和田') },
-      { name: "伊犁哈萨克自治州", code: "654001", districts: generateDefaultDistricts('伊犁') },
-      { name: "塔城地区", code: "654201", districts: generateDefaultDistricts('塔城') },
-      { name: "阿勒泰地区", code: "654301", districts: generateDefaultDistricts('阿勒泰') },
-    ]
-  },
-  {
-    name: "宁夏回族自治区",
-    code: "640000",
-    cities: [
-      { name: "银川市", code: "640101", districts: generateDefaultDistricts('银川') },
-      { name: "石嘴山市", code: "640201", districts: generateDefaultDistricts('石嘴山') },
-      { name: "吴忠市", code: "640301", districts: generateDefaultDistricts('吴忠') },
-      { name: "固原市", code: "640401", districts: generateDefaultDistricts('固原') },
-      { name: "中卫市", code: "640501", districts: generateDefaultDistricts('中卫') },
-    ]
-  },
-  {
-    name: "青海省",
-    code: "630000",
-    cities: [
-      { name: "西宁市", code: "630101", districts: generateDefaultDistricts('西宁') },
-      { name: "海东市", code: "630201", districts: generateDefaultDistricts('海东') },
-      { name: "海北藏族自治州", code: "632201", districts: generateDefaultDistricts('海北') },
-      { name: "黄南藏族自治州", code: "632301", districts: generateDefaultDistricts('黄南') },
-      { name: "海南藏族自治州", code: "632501", districts: generateDefaultDistricts('海南') },
-      { name: "果洛藏族自治州", code: "632601", districts: generateDefaultDistricts('果洛') },
-      { name: "玉树藏族自治州", code: "632701", districts: generateDefaultDistricts('玉树') },
-      { name: "海西蒙古族藏族自治州", code: "632801", districts: generateDefaultDistricts('海西') },
-    ]
-  },
-  {
-    name: "西藏自治区",
-    code: "540000",
-    cities: [
-      { name: "拉萨市", code: "540101", districts: generateDefaultDistricts('拉萨') },
-      { name: "日喀则市", code: "540201", districts: generateDefaultDistricts('日喀则') },
-      { name: "昌都市", code: "540301", districts: generateDefaultDistricts('昌都') },
-      { name: "林芝市", code: "540401", districts: generateDefaultDistricts('林芝') },
-      { name: "山南市", code: "540501", districts: generateDefaultDistricts('山南') },
-      { name: "那曲市", code: "540601", districts: generateDefaultDistricts('那曲') },
-      { name: "阿里地区", code: "542501", districts: generateDefaultDistricts('阿里') },
-    ]
-  },
-  {
-    name: "黑龙江省",
-    code: "230000",
-    cities: [
-      { name: "哈尔滨市", code: "230101", districts: citySpecificDistricts['哈尔滨市'] },
-      { name: "齐齐哈尔市", code: "230201", districts: generateDefaultDistricts('齐齐哈尔') },
-      { name: "鸡西市", code: "230301", districts: generateDefaultDistricts('鸡西') },
-      { name: "鹤岗市", code: "230401", districts: generateDefaultDistricts('鹤岗') },
-      { name: "双鸭山市", code: "230501", districts: generateDefaultDistricts('双鸭山') },
-      { name: "大庆市", code: "230601", districts: generateDefaultDistricts('大庆') },
-      { name: "伊春市", code: "230701", districts: generateDefaultDistricts('伊春') },
-      { name: "佳木斯市", code: "230801", districts: generateDefaultDistricts('佳木斯') },
-      { name: "七台河市", code: "230901", districts: generateDefaultDistricts('七台河') },
-      { name: "牡丹江市", code: "231001", districts: generateDefaultDistricts('牡丹江') },
-      { name: "黑河市", code: "231101", districts: generateDefaultDistricts('黑河') },
-      { name: "绥化市", code: "231201", districts: generateDefaultDistricts('绥化') },
+      { name: "吐鲁番市", code: "650401", districts: generateDefaultDistricts('吐鲁番') },
+      { name: "哈密市", code: "650501", districts: generateDefaultDistricts('哈密') },
     ]
   },
 ];
+
+// 获取城市的区域列表
+export const getCityDistricts = (cityName: string): District[] => {
+  for (const province of chinaProvinces) {
+    const city = province.cities.find(c => c.name === cityName);
+    if (city) {
+      return city.districts;
+    }
+  }
+  return generateDefaultDistricts(cityName);
+};
