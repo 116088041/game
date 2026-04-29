@@ -391,18 +391,20 @@ const EventCard = ({
         {/* 选择结果 - 用户选择后显示 */}
         {selectedOption ? (
           <View className="mt-4 p-4 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl border border-amber-200">
-            <Text className="block text-base text-gray-800 font-medium">{selectedOption.option.text}</Text>
-            <Text className="block text-sm text-gray-500 mt-1">{selectedOption.option.description}</Text>
-            <View className="mt-3 pt-3 border-t border-amber-200">
+            <Text className="block text-base text-gray-800 font-medium">{selectedOption.option.description}</Text>
+            <View className="mt-3 pt-3 border-t border-amber-200 flex items-center justify-between">
               <Text className={`text-lg font-bold ${selectedOption.moneyChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {selectedOption.moneyChange >= 0 ? '+' : ''}{selectedOption.moneyChange}元
+              </Text>
+              <Text className="text-xs text-gray-400">
+                {selectedOption.moneyChange >= 0 ? '好事发生' : '破财消灾'}
               </Text>
             </View>
           </View>
         ) : (
           /* 选项列表 - 用户选择 */
           <View className="mt-4">
-            <Text className="block text-base font-medium text-gray-700 mb-3">请选择：</Text>
+            <Text className="block text-base font-medium text-gray-700 mb-3">请选择你的行动：</Text>
             {event.options.map((option, index) => (
               <View 
                 key={index}
@@ -413,7 +415,6 @@ const EventCard = ({
                 }}
               >
                 <Text className="block text-base text-gray-800 font-medium">{option.text}</Text>
-                <Text className="block text-sm text-gray-500 mt-1">{option.description}</Text>
               </View>
             ))}
           </View>
