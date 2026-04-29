@@ -582,6 +582,57 @@ const IndexPage = () => {
     );
   }
 
+  // 处理事件弹窗关闭逻辑
+  const handleEventDialogClose = () => {
+    if (!currentEventResult || !user) return;
+    
+    const { option, moneyChange } = currentEventResult;
+    const newBalance = user.balance + moneyChange;
+    const moralChange = option.moralValue;
+    
+    // 更新余额和道德值
+    updateBalance(moneyChange, moralChange, currentEvent?.title || '', option.description, currentLocation?.name);
+    setLastChange(moneyChange);
+    
+    // 同步到后端
+    Network.request({
+      url: '/api/game/record',
+      method: 'POST',
+      data: {
+        userId: user.id,
+        eventTitle: currentEvent?.title || '',
+        eventResult: option.description,
+        moneyChange,
+        moralChange,
+        balance: newBalance,
+        moralValue: user.moralValue + moralChange,
+        locationName: currentLocation?.name || user.location.city,
+      }
+    });
+    
+    // 检查余额是否为负数，是则重新开始
+    if (newBalance <= 0) {
+      setGameStatus('GAME_OVER');
+      Taro.showModal({
+        title: '破产了！',
+        content: '你的钱花光了，游戏结束！是否重新开始？',
+        confirmText: '重新开始',
+        cancelText: '查看排名',
+        success: (res) => {
+          if (res.confirm) {
+            // 重新开始
+            useGameStore.getState().setUser(null);
+            useGameStore.setState({ gameStatus: 'INIT' });
+          }
+        }
+      });
+    }
+    
+    setCurrentEvent(null);
+    setCurrentEventResult(null);
+    setShowEventDialog(false);
+  };
+
   // 渲染游戏主界面
   return (
     <View className="min-h-screen bg-gray-50">
@@ -665,53 +716,8 @@ const IndexPage = () => {
       <Dialog open={showEventDialog} onOpenChange={(open) => {
         // 只有在选择后（currentEventResult 不为空）才允许关闭
         if (!open && currentEventResult) {
-          // 关闭弹窗时执行结算逻辑
-          if (user) {
-            const { option, moneyChange } = currentEventResult;
-            const newBalance = user.balance + moneyChange;
-            const moralChange = option.moralValue;
-            
-            // 更新余额和道德值
-            updateBalance(moneyChange, moralChange, currentEvent?.title || '', option.description, currentLocation?.name);
-            setLastChange(moneyChange);
-            
-            // 同步到后端
-            Network.request({
-              url: '/api/game/record',
-              method: 'POST',
-              data: {
-                userId: user.id,
-                eventTitle: currentEvent?.title || '',
-                eventResult: option.description,
-                moneyChange,
-                moralChange,
-                balance: newBalance,
-                moralValue: user.moralValue + moralChange,
-                locationName: currentLocation?.name || user.location.city,
-              }
-            });
-            
-            // 检查余额是否为负数，是则重新开始
-            if (newBalance <= 0) {
-              setGameStatus('GAME_OVER');
-              Taro.showModal({
-                title: '破产了！',
-                content: '你的钱花光了，游戏结束！是否重新开始？',
-                confirmText: '重新开始',
-                cancelText: '查看排名',
-                success: (res) => {
-                  if (res.confirm) {
-                    // 重新开始
-                    useGameStore.getState().setUser(null);
-                    useGameStore.setState({ gameStatus: 'INIT' });
-                  }
-                }
-              });
-            }
-          }
-          setCurrentEvent(null);
-          setCurrentEventResult(null);
-          setShowEventDialog(false);
+          // 执行关闭后的结算逻辑
+          handleEventDialogClose();
         } else if (!open && !currentEventResult) {
           // 用户还没选择，阻止关闭
           setShowEventDialog(true);
@@ -728,7 +734,7 @@ const IndexPage = () => {
                 // 用户选择后设置结果，等待用户手动关闭
                 setCurrentEventResult({ option, moneyChange });
               }}
-              onClose={() => setShowEventDialog(false)}
+              onClose={handleEventDialogClose}
             />
           )}
         </DialogContent>
