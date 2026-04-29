@@ -1,4 +1,4 @@
-import { View, Text, ScrollView } from '@tarojs/components';
+import { View, Text, ScrollView, Video } from '@tarojs/components';
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -707,6 +707,24 @@ const IndexPage = () => {
   // 渲染游戏主界面
   return (
     <View className="min-h-screen bg-gray-50">
+      {/* 街溜子行走动画 */}
+      <View className="w-full aspect-video bg-gradient-to-b from-sky-200 to-sky-100 relative overflow-hidden">
+        <Video
+          className="w-full h-full"
+          src="https://coze-coding-mockdata.tos-cn-beijing.volces.com/video_8uw1mlU.mp4"
+          controls={false}
+          autoplay={false}
+          loop
+          showCenterPlayBtn={false}
+          showPlayBtn={false}
+          enableProgressGesture={false}
+          objectFit="cover"
+        />
+        <View className="absolute bottom-2 left-2 bg-black bg-opacity-50 rounded px-2 py-1">
+          <Text className="text-white text-xs">街溜子街头漫步</Text>
+        </View>
+      </View>
+
       {/* 顶部状态栏 */}
       <View className="bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-4 shadow-lg">
         <View className="flex items-center justify-between mb-3">
