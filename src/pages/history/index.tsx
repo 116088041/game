@@ -20,6 +20,7 @@ interface HistoryRecord {
 export default function History() {
   const [records, setRecords] = useState<HistoryRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const user = useGameStore((state) => state.user);
   const gameStatus = useGameStore((state) => state.gameStatus);
 
@@ -198,16 +199,17 @@ export default function History() {
                 {dayRecords.map((record) => (
                   <Card 
                     key={record.id} 
-                    className={`mb-2 border-l-4 ${
+                    className={`mb-2 border-l-4 cursor-pointer transition-all ${
                       record.moneyChange >= 0 
                         ? 'border-l-green-500 bg-green-50' 
                         : 'border-l-red-500 bg-red-50'
-                    }`}
+                    } ${expandedId === record.id ? 'shadow-lg' : ''}`}
+                    onClick={() => setExpandedId(expandedId === record.id ? null : record.id)}
                   >
                     <CardContent className="p-3">
                       <View className="flex items-start gap-3">
                         {/* 图标 */}
-                        <View className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                        <View className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
                           record.moneyChange >= 0 
                             ? 'bg-green-100' 
                             : 'bg-red-100'
@@ -236,8 +238,32 @@ export default function History() {
                                 <Clock size={10} color="#9ca3af" className="ml-2" />
                                 <Text className="text-xs text-gray-400">{formatDate(record.createdAt)}</Text>
                               </View>
+                              
+                              {/* 展开显示更多信息 */}
+                              {expandedId === record.id && (
+                                <View className="mt-3 p-3 bg-white bg-opacity-70 rounded-lg border border-gray-200">
+                                  <Text className="block text-xs text-gray-500 mb-2 font-medium">事件详情:</Text>
+                                  <Text className="block text-sm text-gray-700 leading-relaxed">
+                                    {record.eventResult}
+                                  </Text>
+                                  <View className="mt-2 pt-2 border-t border-gray-200">
+                                    <Text className="text-xs text-gray-400">
+                                      发生地点: {record.locationName}
+                                    </Text>
+                                    <Text className="text-xs text-gray-400 mt-1">
+                                      当时余额: ¥{record.balance.toLocaleString()}
+                                    </Text>
+                                    <Text className={`text-sm font-bold mt-2 ${
+                                      record.moneyChange >= 0 ? 'text-green-600' : 'text-red-500'
+                                    }`}
+                                    >
+                                      金额变化: {record.moneyChange >= 0 ? '+' : ''}{record.moneyChange}元
+                                    </Text>
+                                  </View>
+                                </View>
+                              )}
                             </View>
-                            <Text className={`text-lg font-bold ${
+                            <Text className={`text-lg font-bold ml-2 ${
                               record.moneyChange >= 0 
                                 ? 'text-green-600' 
                                 : 'text-red-500'
@@ -249,11 +275,13 @@ export default function History() {
                         </View>
                       </View>
 
-                      {/* 当天余额 */}
-                      <View className="mt-2 pt-2 border-t border-gray-200 flex justify-between text-xs text-gray-400">
-                        <Text>发生地点: {record.locationName}</Text>
-                        <Text>余额: ¥{record.balance.toLocaleString()}</Text>
-                      </View>
+                      {/* 底部信息 - 未展开时显示 */}
+                      {expandedId !== record.id && (
+                        <View className="mt-2 pt-2 border-t border-gray-200 flex justify-between text-xs text-gray-400">
+                          <Text>点击查看详情</Text>
+                          <Text>余额: ¥{record.balance.toLocaleString()}</Text>
+                        </View>
+                      )}
                     </CardContent>
                   </Card>
                 ))}
