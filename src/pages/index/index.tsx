@@ -679,10 +679,10 @@ const IndexPage = () => {
             </View>
           </View>
           {/* 道德值显示 */}
-          <View className="flex items-center gap-2 bg-white bg-opacity-20 rounded-full px-3 py-1">
-            <Heart size={14} color={user?.moralValue >= 0 ? '#ffffff' : '#ff6b6b'} />
-            <Text className="text-white text-sm font-medium">
-              {(user?.moralValue ?? 50) >= 0 ? '+' : ''}{user?.moralValue ?? 50}
+          <View className="flex items-center gap-2 bg-amber-500 rounded-full px-3 py-1">
+            <Heart size={14} color="#ffffff" />
+            <Text className="text-white text-sm font-bold">
+              {user?.moralValue ?? 50}
             </Text>
           </View>
         </View>
