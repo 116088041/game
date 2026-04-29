@@ -454,46 +454,21 @@ export const chinaProvinces: Province[] = [
     name: "北京市",
     code: "110000",
     cities: [
-      { name: "东城区", code: "110101", districts: beijingDistricts.filter(d => ['东城区', '故宫博物院'].includes(d.name) || d.type !== 'district') },
-      { name: "西城区", code: "110102", districts: beijingDistricts.filter(d => ['西城区', '王府井步行街'].includes(d.name) || d.type !== 'district') },
-      { name: "朝阳区", code: "110105", districts: beijingDistricts.filter(d => ['三里屯商圈', '朝阳区分局', '望京SOHO'].includes(d.name)) },
-      { name: "丰台区", code: "110106", districts: [...beijingDistricts.filter(d => d.type !== 'district').slice(0, 4), { name: '丰台区', type: 'district' as const }] },
-      { name: "海淀区", code: "110108", districts: beijingDistricts.filter(d => ['中关村科技园', '海淀区', '颐和园', '长城'].includes(d.name)) },
-      { name: "通州区", code: "110112", districts: [...beijingDistricts.slice(0, 3), { name: '通州区', type: 'district' as const }] },
-      { name: "顺义区", code: "110113", districts: [...beijingDistricts.slice(0, 4), { name: '顺义区', type: 'district' as const }] },
-      { name: "昌平区", code: "110114", districts: [...beijingDistricts.slice(0, 4), { name: '昌平区', type: 'district' as const }, { name: '长城', type: 'scenic' as const }] },
-      { name: "大兴区", code: "110115", districts: [...beijingDistricts.slice(0, 4), { name: '大兴区', type: 'district' as const }] },
+      { name: "北京市", code: "110100", districts: beijingDistricts }
     ]
   },
   {
     name: "天津市",
     code: "120000",
     cities: [
-      { name: "和平区", code: "120101", districts: citySpecificDistricts['天津市'].slice(0, 4) },
-      { name: "河东区", code: "120102", districts: [...citySpecificDistricts['天津市'].slice(4), { name: '河东区', type: 'district' as const }] },
-      { name: "河西区", code: "120103", districts: [...citySpecificDistricts['天津市'].slice(0, 4), { name: '河西区', type: 'district' as const }] },
-      { name: "南开区", code: "120104", districts: citySpecificDistricts['天津市'] },
-      { name: "河北区", code: "120105", districts: [...citySpecificDistricts['天津市'].slice(0, 5), { name: '河北区', type: 'district' as const }] },
-      { name: "红桥区", code: "120106", districts: [...citySpecificDistricts['天津市'].slice(0, 4), { name: '红桥区', type: 'district' as const }] },
-      { name: "滨海新区", code: "120110", districts: [...citySpecificDistricts['天津市'].slice(0, 4), { name: '滨海新区', type: 'district' as const }] },
+      { name: "天津市", code: "120100", districts: citySpecificDistricts['天津市'] }
     ]
   },
   {
     name: "上海市",
     code: "310000",
     cities: [
-      { name: "黄浦区", code: "310101", districts: shanghaiDistricts.filter(d => ['外滩', '南京路步行街', '黄浦区', '豫园', '城隍庙'].includes(d.name)) },
-      { name: "徐汇区", code: "310104", districts: shanghaiDistricts.filter(d => ['徐家汇商圈', '静安区'].includes(d.name) || d.type === 'district') },
-      { name: "长宁区", code: "310105", districts: [...shanghaiDistricts.slice(0, 5), { name: '长宁区', type: 'district' as const }] },
-      { name: "静安区", code: "310106", districts: shanghaiDistricts.filter(d => ['静安区', '南京路步行街', '新天地'].includes(d.name)) },
-      { name: "普陀区", code: "310107", districts: [...shanghaiDistricts.slice(0, 5), { name: '普陀区', type: 'district' as const }] },
-      { name: "虹口区", code: "310109", districts: [...shanghaiDistricts.slice(0, 5), { name: '虹口区', type: 'district' as const }] },
-      { name: "杨浦区", code: "310110", districts: [...shanghaiDistricts.slice(0, 5), { name: '杨浦区', type: 'district' as const }] },
-      { name: "浦东新区", code: "310115", districts: shanghaiDistricts.filter(d => ['浦东新区', '陆家嘴金融区', '迪士尼乐园'].includes(d.name)) },
-      { name: "闵行区", code: "310112", districts: [...shanghaiDistricts.slice(0, 5), { name: '闵行区', type: 'district' as const }] },
-      { name: "宝山区", code: "310113", districts: [...shanghaiDistricts.slice(0, 5), { name: '宝山区', type: 'district' as const }] },
-      { name: "嘉定区", code: "310114", districts: [...shanghaiDistricts.slice(0, 5), { name: '嘉定区', type: 'district' as const }] },
-      { name: "松江区", code: "310117", districts: [...shanghaiDistricts.slice(0, 5), { name: '松江区', type: 'district' as const }] },
+      { name: "上海市", code: "310100", districts: shanghaiDistricts }
     ]
   },
   {

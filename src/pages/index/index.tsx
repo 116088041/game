@@ -711,7 +711,7 @@ const IndexPage = () => {
       <View className="w-full aspect-video bg-gradient-to-b from-sky-200 to-sky-100 relative overflow-hidden">
         <Video
           className="w-full h-full"
-          src="https://coze-coding-mockdata.tos-cn-beijing.volces.com/video_8uw1mlU.mp4"
+          src="https://coze-coding-project.tos.coze.site/coze_storage_7634003127947231295/video/video_generate_cgt-20260429114640-zb8m6.mp4"
           controls={false}
           autoplay={false}
           loop
