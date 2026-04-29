@@ -11,7 +11,7 @@ import {
   RefreshCw, User, Map, Navigation, Store
 } from 'lucide-react-taro';
 import { chinaProvinces, type Province, type City, type District } from '@/data/china-cities';
-import { getWeightedRandomEvent, getRandomOption, type GameEvent, type GameEventOption } from '@/data/game-events';
+import { getWeightedRandomEvent, type GameEvent, type GameEventOption } from '@/data/game-events';
 import { useGameStore, initializeUser, type RankingInfo } from '@/store/game-store';
 import { Network } from '@/network';
 import './index.css';
@@ -311,22 +311,18 @@ const MoneyDisplay = ({ balance, change }: { balance: number; change?: number })
   </View>
 );
 
-// 事件卡片组件 - 展示事件和结果
+// 事件卡片组件 - 用户选择后显示结果
 const EventCard = ({ 
   event, 
   locationName,
-  result
+  onSelect,
+  selectedOption
 }: { 
   event: GameEvent; 
   locationName: string;
-  result: { option: GameEventOption; moneyChange: number } | null;
+  onSelect: (option: GameEventOption, moneyChange: number) => void;
+  selectedOption: { option: GameEventOption; moneyChange: number } | null;
 }) => {
-  const selectedOption = result ? {
-    text: result.option.text,
-    description: result.option.description,
-    moneyChange: result.moneyChange,
-  } : null;
-  
   const getTypeColor = (type: string) => {
     switch (type) {
       case 'work': return 'bg-blue-100 text-blue-600';
@@ -360,6 +356,12 @@ const EventCard = ({
     }
   };
 
+  // 计算每个选项的金额（但不显示）
+  const getOptionMoneyChange = (option: GameEventOption): number => {
+    const percent = option.percentMin + Math.random() * (option.percentMax - option.percentMin);
+    return Math.round(100 * (percent / 100));
+  };
+
   return (
     <View className="flex flex-col items-center p-4">
       <View className="w-full bg-white rounded-2xl p-5 shadow-lg">
@@ -386,24 +388,36 @@ const EventCard = ({
           </View>
         </View>
 
-        {/* 结果展示 */}
-        <View className="mt-4 p-4 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl border border-amber-200">
-          {selectedOption ? (
-            <>
-              <Text className="block text-base text-gray-800 font-medium">{selectedOption.text}</Text>
-              <Text className="block text-sm text-gray-500 mt-1">{selectedOption.description}</Text>
-              <View className="mt-3 pt-3 border-t border-amber-200">
-                <Text className={`text-lg font-bold ${selectedOption.moneyChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {selectedOption.moneyChange >= 0 ? '+' : ''}{selectedOption.moneyChange}元
-                </Text>
-              </View>
-            </>
-          ) : (
-            <View className="flex items-center justify-center py-4">
-              <Text className="text-sm text-gray-500">系统正在决策中...</Text>
+        {/* 选择结果 - 用户选择后显示 */}
+        {selectedOption ? (
+          <View className="mt-4 p-4 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl border border-amber-200">
+            <Text className="block text-base text-gray-800 font-medium">{selectedOption.option.text}</Text>
+            <Text className="block text-sm text-gray-500 mt-1">{selectedOption.option.description}</Text>
+            <View className="mt-3 pt-3 border-t border-amber-200">
+              <Text className={`text-lg font-bold ${selectedOption.moneyChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {selectedOption.moneyChange >= 0 ? '+' : ''}{selectedOption.moneyChange}元
+              </Text>
             </View>
-          )}
-        </View>
+          </View>
+        ) : (
+          /* 选项列表 - 用户选择 */
+          <View className="mt-4">
+            <Text className="block text-base font-medium text-gray-700 mb-3">请选择：</Text>
+            {event.options.map((option, index) => (
+              <View 
+                key={index}
+                className="mb-3 p-4 bg-gray-50 rounded-xl border border-gray-200 active:bg-gray-100"
+                onClick={() => {
+                  const moneyChange = getOptionMoneyChange(option);
+                  onSelect(option, moneyChange);
+                }}
+              >
+                <Text className="block text-base text-gray-800 font-medium">{option.text}</Text>
+                <Text className="block text-sm text-gray-500 mt-1">{option.description}</Text>
+              </View>
+            ))}
+          </View>
+        )}
       </View>
     </View>
   );
@@ -437,20 +451,15 @@ const IndexPage = () => {
   const handleSelectLocation = (district: District) => {
     setCurrentLocation(district);
     setShowLocationPicker(false);
+    setCurrentEventResult(null); // 重置结果
     
-    // 根据地点类型调整事件权重，并计算结果
+    // 根据地点类型获取随机事件
     const event = getWeightedRandomEvent();
     setCurrentEvent(event);
     
-    // 立即计算结果
-    const result = getRandomOption(event);
-    setCurrentEventResult({ option: result.option, moneyChange: result.moneyChange });
-    
-    // 1.5秒后显示结果
-    setTimeout(() => {
-      setShowEventDialog(true);
-      setGameStatus('EVENT');
-    }, 1500);
+    // 立即显示事件弹窗，让用户选择
+    setShowEventDialog(true);
+    setGameStatus('EVENT');
   };
   
   // 获取排名信息
@@ -630,7 +639,7 @@ const IndexPage = () => {
         />
       </Dialog>
 
-      {/* 事件弹窗 - 点击外部关闭 */}
+      {/* 事件弹窗 - 用户选择后关闭 */}
       <Dialog open={showEventDialog} onOpenChange={(open) => {
         if (!open && user && currentEventResult) {
           // 关闭弹窗时执行结算逻辑
@@ -660,11 +669,41 @@ const IndexPage = () => {
       }}
       >
         <DialogContent className="max-h-[80vh] overflow-y-auto">
-          {currentEvent && currentEventResult && (
+          {currentEvent && (
             <EventCard
               event={currentEvent}
               locationName={currentLocation?.name || user.location.city}
-              result={currentEventResult}
+              selectedOption={currentEventResult}
+              onSelect={(option, moneyChange) => {
+                // 用户选择后设置结果
+                setCurrentEventResult({ option, moneyChange });
+                // 1秒后自动关闭弹窗并结算
+                setTimeout(() => {
+                  if (user) {
+                    const newBalance = user.balance + moneyChange;
+                    updateBalance(moneyChange, currentEvent.title, option.description, currentLocation?.name);
+                    setLastChange(moneyChange);
+                    
+                    // 同步到后端
+                    Network.request({
+                      url: '/api/game/record',
+                      method: 'POST',
+                      data: {
+                        userId: user.id,
+                        day: user.day,
+                        eventTitle: currentEvent.title,
+                        eventResult: option.description,
+                        moneyChange,
+                        balance: newBalance,
+                        locationName: currentLocation?.name || user.location.city,
+                      }
+                    });
+                  }
+                  setShowEventDialog(false);
+                  setCurrentEvent(null);
+                  setCurrentEventResult(null);
+                }, 1500);
+              }}
             />
           )}
         </DialogContent>
