@@ -7,13 +7,35 @@ import { Badge } from '@/components/ui/badge';
 import { 
   Trophy, Coins, MapPin, Calendar, TrendingUp, 
   TrendingDown, CircleAlert, Zap, Crown, Building,
-  RefreshCw, User, Clock
+  RefreshCw, User, Clock, Map, Navigation, Store
 } from 'lucide-react-taro';
-import { chinaProvinces, type Province, type City } from '@/data/china-cities';
+import { chinaProvinces, type Province, type City, type District } from '@/data/china-cities';
 import { getRandomEvent, type GameEvent, type GameEventOption } from '@/data/game-events';
 import { useGameStore, initializeUser, type RankingInfo } from '@/store/game-store';
 import { Network } from '@/network';
 import './index.css';
+
+// 获取地点类型的图标和颜色
+const getDistrictIcon = (type: District['type']) => {
+  switch (type) {
+    case 'district': return { icon: Building, color: '#6b7280', bg: 'bg-gray-100' };
+    case 'business': return { icon: Store, color: '#f59e0b', bg: 'bg-amber-100' };
+    case 'scenic': return { icon: Map, color: '#10b981', bg: 'bg-green-100' };
+    case 'street': return { icon: Navigation, color: '#8b5cf6', bg: 'bg-purple-100' };
+    default: return { icon: MapPin, color: '#6b7280', bg: 'bg-gray-100' };
+  }
+};
+
+// 获取地点类型名称
+const getDistrictTypeName = (type: District['type']) => {
+  switch (type) {
+    case 'district': return '区县';
+    case 'business': return '商圈';
+    case 'scenic': return '景点';
+    case 'street': return '街区';
+    default: return '地点';
+  }
+};
 
 // 出生地选择器组件
 const LocationSelector = ({ 
@@ -180,7 +202,7 @@ const LocationSelector = ({
                   if (selectedProvince && selectedCity) {
                     initializeUser(nickname, {
                       province: selectedProvince.name,
-                      provinceCode: selectedProvince.code,
+                      provinceCode: selectedProvince.code.slice(0, 2) + '0000', // 省级代码
                       city: selectedCity.name,
                       cityCode: selectedCity.code
                     });
@@ -194,6 +216,103 @@ const LocationSelector = ({
           </View>
         </View>
       )}
+    </View>
+  );
+};
+
+// 地点选择器组件
+const LocationPicker = ({ 
+  districts, 
+  selectedDistrict, 
+  onSelect,
+  onCancel
+}: { 
+  districts: District[]; 
+  selectedDistrict: District | null;
+  onSelect: (d: District) => void;
+  onCancel: () => void;
+}) => {
+  const [filterType, setFilterType] = useState<District['type'] | 'all'>('all');
+
+  const filteredDistricts = filterType === 'all' 
+    ? districts 
+    : districts.filter(d => d.type === filterType);
+
+  const typeOptions: { type: District['type'] | 'all'; label: string }[] = [
+    { type: 'all', label: '全部' },
+    { type: 'business', label: '商圈' },
+    { type: 'street', label: '街区' },
+    { type: 'scenic', label: '景点' },
+    { type: 'district', label: '区县' },
+  ];
+
+  return (
+    <View className="p-4">
+      <Text className="block text-xl font-bold text-center mb-4 text-gray-800">
+        选择你要去的地方
+      </Text>
+      <Text className="block text-sm text-center text-gray-500 mb-4">
+        第{useGameStore.getState().user?.day || 1}天 - 选择一个地点触发事件
+      </Text>
+
+      {/* 类型筛选 */}
+      <ScrollView scrollX className="mb-4">
+        <View className="flex gap-2">
+          {typeOptions.map(opt => (
+            <View 
+              key={opt.type}
+              className={`px-3 py-1 rounded-full ${filterType === opt.type ? 'bg-amber-500 text-white' : 'bg-gray-100 text-gray-600'}`}
+              onClick={() => setFilterType(opt.type)}
+            >
+              <Text className="text-xs">{opt.label}</Text>
+            </View>
+          ))}
+        </View>
+      </ScrollView>
+
+      {/* 地点列表 */}
+      <ScrollView scrollY className="max-h-80">
+        <View className="grid grid-cols-2 gap-2">
+          {filteredDistricts.map((district, index) => {
+            const { icon: IconComp, color, bg } = getDistrictIcon(district.type);
+            return (
+              <View 
+                key={index}
+                className={`p-3 rounded-xl ${selectedDistrict === district ? 'bg-amber-500 text-white' : 'bg-white'} border border-gray-100`}
+                onClick={() => onSelect(district)}
+              >
+                <View className="flex items-center gap-2">
+                  <View className={`w-10 h-10 rounded-full ${bg} flex items-center justify-center`}>
+                    <IconComp size={18} color={selectedDistrict === district ? '#fff' : color} />
+                  </View>
+                  <View className="flex-1">
+                    <Text className={`block text-sm font-medium ${selectedDistrict === district ? 'text-white' : 'text-gray-800'}`}>
+                      {district.name}
+                    </Text>
+                    <Text className={`text-xs ${selectedDistrict === district ? 'text-amber-100' : 'text-gray-400'}`}>
+                      {getDistrictTypeName(district.type)}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            );
+          })}
+        </View>
+      </ScrollView>
+
+      <View className="flex gap-2 mt-4">
+        <Button variant="outline" className="flex-1" onClick={onCancel}>
+          <Text>取消</Text>
+        </Button>
+        <Button 
+          className="flex-1 bg-amber-500 hover:bg-amber-600 text-white"
+          disabled={!selectedDistrict}
+          onClick={() => selectedDistrict && onSelect(selectedDistrict)}
+        >
+          <Navigation size={16} color="#ffffff" className="mr-1" />
+          <Text>出发！</Text>
+        </Button>
+      </View>
     </View>
   );
 };
@@ -253,9 +372,11 @@ const RankingCard = ({
 // 事件卡片组件
 const EventCard = ({ 
   event, 
+  locationName,
   onSelectOption 
 }: { 
   event: GameEvent; 
+  locationName: string;
   onSelectOption: (option: GameEventOption) => void;
 }) => {
   const getTypeColor = (type: string) => {
@@ -280,6 +401,17 @@ const EventCard = ({
     }
   };
 
+  const getEventEmoji = (type: string) => {
+    switch (type) {
+      case 'work': return '💼';
+      case 'investment': return '📈';
+      case 'consumption': return '🛒';
+      case 'opportunity': return '🍀';
+      case 'risk': return '⚠️';
+      default: return '🎲';
+    }
+  };
+
   return (
     <View className="flex flex-col items-center p-4">
       <View className="w-full bg-white rounded-2xl p-5 shadow-lg">
@@ -289,10 +421,16 @@ const EventCard = ({
           </Badge>
           <Text className="text-sm text-gray-400">第{useGameStore.getState().user?.day || 1}天</Text>
         </View>
+
+        {/* 地点信息 */}
+        <View className="flex items-center gap-2 mb-4 bg-amber-50 rounded-lg px-3 py-2">
+          <MapPin size={14} color="#f59e0b" />
+          <Text className="text-sm text-amber-700">当前位置：{locationName}</Text>
+        </View>
         
         <View className="flex items-center gap-3 mb-4">
           <View className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center">
-            <Text className="text-2xl">{event.icon === 'Briefcase' ? '💼' : event.icon === 'TrendingUp' ? '📈' : event.icon === 'Utensils' ? '🍜' : event.icon === 'Wallet' ? '👛' : event.icon === 'AlertTriangle' ? '⚠️' : '🎲'}</Text>
+            <Text className="text-2xl">{getEventEmoji(event.type)}</Text>
           </View>
           <View className="flex-1">
             <Text className="block text-lg font-bold text-gray-800">{event.title}</Text>
@@ -334,6 +472,12 @@ const DailyRecordCard = ({ record }: { record: any }) => (
           <View>
             <Text className="block text-sm font-medium text-gray-800">{record.eventTitle}</Text>
             <Text className="block text-xs text-gray-400">{record.eventResult}</Text>
+            {record.locationName && (
+              <View className="flex items-center gap-1 mt-1">
+                <MapPin size={10} color="#9ca3af" />
+                <Text className="text-xs text-gray-400">{record.locationName}</Text>
+              </View>
+            )}
           </View>
         </View>
         <Text className={`text-base font-bold ${record.moneyChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
@@ -357,19 +501,39 @@ const IndexPage = () => {
   const [showEventDialog, setShowEventDialog] = useState(false);
   const [showRankDialog, setShowRankDialog] = useState(false);
   const [showHistoryDialog, setShowHistoryDialog] = useState(false);
+  const [showLocationPicker, setShowLocationPicker] = useState(false);
   const [lastChange, setLastChange] = useState<number | undefined>(undefined);
+  const [currentLocation, setCurrentLocation] = useState<District | null>(null);
   
-  // 获取随机事件
+  // 获取当前城市的区域列表
+  const getCurrentDistricts = (): District[] => {
+    if (!user) return [];
+    const province = chinaProvinces.find(p => p.code === user.location.provinceCode);
+    const city = province?.cities.find(c => c.code === user.location.cityCode);
+    return city?.districts || [];
+  };
+
+  // 点击随机事件按钮 - 先选择地点
   const handleGetEvent = () => {
+    setCurrentLocation(null);
+    setShowLocationPicker(true);
+  };
+
+  // 选择地点后触发事件
+  const handleSelectLocation = (district: District) => {
+    setCurrentLocation(district);
+    setShowLocationPicker(false);
+    
+    // 根据地点类型调整事件权重
     const event = getRandomEvent();
     setCurrentEvent(event);
     setShowEventDialog(true);
     setGameStatus('EVENT');
   };
-  
+
   // 处理事件选项
   const handleSelectOption = (option: GameEventOption) => {
-    updateBalance(option.moneyChange, currentEvent?.title || '', option.description);
+    updateBalance(option.moneyChange, currentEvent?.title || '', option.description, currentLocation?.name);
     setLastChange(option.moneyChange);
     setShowEventDialog(false);
     setCurrentEvent(null);
@@ -385,10 +549,10 @@ const IndexPage = () => {
           eventTitle: currentEvent?.title,
           eventResult: option.description,
           moneyChange: option.moneyChange,
-          balance: user.balance + option.moneyChange
+          balance: user.balance + option.moneyChange,
+          locationName: currentLocation?.name || ''
         }
       }).then(() => {
-        // 更新排名
         fetchRanking();
       });
     }
@@ -400,6 +564,7 @@ const IndexPage = () => {
       useGameStore.getState().syncUserData({ day: user.day + 1 });
     }
     setLastChange(undefined);
+    setCurrentLocation(null);
   };
   
   // 获取排名信息
@@ -532,6 +697,14 @@ const IndexPage = () => {
           <Text className="block text-amber-100 text-sm mb-1">当前资金</Text>
           <MoneyDisplay balance={user.balance} change={lastChange} />
         </View>
+
+        {/* 当前位置显示 */}
+        {currentLocation && (
+          <View className="mt-2 flex items-center gap-2 bg-white bg-opacity-20 rounded-lg px-3 py-2">
+            <MapPin size={14} color="#ffffff" />
+            <Text className="text-white text-sm">当前位置：{currentLocation.name}</Text>
+          </View>
+        )}
       </View>
 
       {/* 主操作区 */}
@@ -544,8 +717,8 @@ const IndexPage = () => {
           >
             <View className="flex flex-col items-center">
               <Zap size={28} color="#ffffff" className="mb-1" />
-              <Text className="text-base font-bold">随机事件</Text>
-              <Text className="text-xs opacity-80">点击触发</Text>
+              <Text className="text-base font-bold">出门探索</Text>
+              <Text className="text-xs opacity-80">选择地点</Text>
             </View>
           </Button>
           
@@ -571,7 +744,7 @@ const IndexPage = () => {
           >
             <View className="flex items-center gap-2">
               <Clock size={18} color="#6b7280" />
-              <Text className="text-sm text-gray-600">跳过今天</Text>
+              <Text className="text-sm text-gray-600">下一天</Text>
             </View>
           </Button>
           
@@ -587,6 +760,23 @@ const IndexPage = () => {
           </Button>
         </View>
 
+        {/* 当前城市可探索地点提示 */}
+        <Card className="bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200 mb-4">
+          <CardContent className="p-4">
+            <View className="flex items-start gap-3">
+              <View className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
+                <Map size={20} color="#f59e0b" />
+              </View>
+              <View className="flex-1">
+                <Text className="block text-sm font-bold text-gray-800 mb-1">{user.location.city}可探索地点</Text>
+                <Text className="block text-xs text-gray-600 leading-relaxed">
+                  共有 {getCurrentDistricts().length} 个可探索地点：商圈 {getCurrentDistricts().filter(d => d.type === 'business').length} 个、街区 {getCurrentDistricts().filter(d => d.type === 'street').length} 个、景点 {getCurrentDistricts().filter(d => d.type === 'scenic').length} 个、区县 {getCurrentDistricts().filter(d => d.type === 'district').length} 个
+                </Text>
+              </View>
+            </View>
+          </CardContent>
+        </Card>
+
         {/* 游戏提示 */}
         <Card className="bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200">
           <CardContent className="p-4">
@@ -597,7 +787,7 @@ const IndexPage = () => {
               <View>
                 <Text className="block text-sm font-bold text-gray-800 mb-1">游戏提示</Text>
                 <Text className="block text-xs text-gray-600 leading-relaxed">
-                  每天会发生随机事件，每个选择都会影响你的资金变化。明智的选择能让你快速积累财富，成为首富！
+                  每天出门前先选择要去的地点！不同地点会遇到不同的事件。商圈适合工作和投资，街区适合消费，景点可能有惊喜！
                 </Text>
               </View>
             </View>
@@ -612,12 +802,23 @@ const IndexPage = () => {
         </View>
       </View>
 
+      {/* 地点选择弹窗 */}
+      <Dialog open={showLocationPicker} onOpenChange={setShowLocationPicker}>
+        <LocationPicker 
+          districts={getCurrentDistricts()}
+          selectedDistrict={currentLocation}
+          onSelect={handleSelectLocation}
+          onCancel={() => setShowLocationPicker(false)}
+        />
+      </Dialog>
+
       {/* 事件弹窗 */}
       <Dialog open={showEventDialog} onOpenChange={setShowEventDialog}>
         <View className="p-4">
           {currentEvent && (
             <EventCard 
               event={currentEvent} 
+              locationName={currentLocation?.name || user.location.city}
               onSelectOption={handleSelectOption}
             />
           )}

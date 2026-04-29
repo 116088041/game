@@ -21,6 +21,7 @@ export interface DailyRecord {
   eventResult: string;
   moneyChange: number;
   balance: number;
+  locationName?: string;
   createdAt: Date;
 }
 
@@ -82,6 +83,7 @@ export class GameService {
     eventResult: string;
     moneyChange: number;
     balance: number;
+    locationName?: string;
   }): Promise<DailyRecord> {
     const record: DailyRecord = {
       userId: data.userId,
@@ -90,6 +92,7 @@ export class GameService {
       eventResult: data.eventResult,
       moneyChange: data.moneyChange,
       balance: data.balance,
+      locationName: data.locationName,
       createdAt: new Date(),
     };
 

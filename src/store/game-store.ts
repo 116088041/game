@@ -20,6 +20,7 @@ export interface DailyRecord {
   balance: number;
   eventTitle: string;
   eventResult: string;
+  locationName?: string;
 }
 
 // 用户数据
@@ -67,7 +68,7 @@ interface GameState {
   
   // 动作
   setUser: (user: UserData) => void;
-  updateBalance: (change: number, eventTitle: string, eventResult: string) => void;
+  updateBalance: (change: number, eventTitle: string, eventResult: string, locationName?: string) => void;
   setGameStatus: (status: GameStatus) => void;
   setCurrentEvent: (event: any | null) => void;
   setRanking: (ranking: RankingInfo | null) => void;
@@ -111,7 +112,7 @@ export const useGameStore = create<GameState>()(
       
       setUser: (user) => set({ user }),
       
-      updateBalance: (change, eventTitle, eventResult) => {
+      updateBalance: (change, eventTitle, eventResult, locationName) => {
         const { user } = get();
         if (!user) return;
         
@@ -124,7 +125,8 @@ export const useGameStore = create<GameState>()(
           moneyChange: change,
           balance: newBalance,
           eventTitle,
-          eventResult
+          eventResult,
+          locationName
         };
         
         set({

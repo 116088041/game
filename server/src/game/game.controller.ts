@@ -53,6 +53,7 @@ export class GameController {
       eventResult: string;
       moneyChange: number;
       balance: number;
+      locationName?: string;
     }
   ) {
     console.log('[Game] POST /api/game/record - 记录事件:', {
