@@ -392,14 +392,25 @@ const EventCard = ({
         {selectedOption ? (
           <View className="mt-4 p-4 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl border border-amber-200">
             <Text className="block text-base text-gray-800 font-medium">{selectedOption.option.description}</Text>
-            <View className="mt-3 pt-3 border-t border-amber-200 flex items-center justify-between">
-              <Text className={`text-lg font-bold ${selectedOption.moneyChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {selectedOption.moneyChange >= 0 ? '+' : ''}{selectedOption.moneyChange}元
-              </Text>
+            <View className="mt-3 pt-3 border-t border-amber-200">
+              <View className="flex items-center justify-between mb-2">
+                <Text className={`text-xl font-bold ${selectedOption.moneyChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {selectedOption.moneyChange >= 0 ? '+' : ''}{selectedOption.moneyChange}元
+                </Text>
+                <View className="flex items-center gap-1">
+                  <Heart size={14} color={selectedOption.option.moralValue >= 0 ? '#10b981' : '#ef4444'} />
+                  <Text className={`text-sm ${selectedOption.option.moralValue >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+                    {selectedOption.option.moralValue >= 0 ? '+' : ''}{selectedOption.option.moralValue}道德值
+                  </Text>
+                </View>
+              </View>
               <Text className="text-xs text-gray-400">
                 {selectedOption.moneyChange >= 0 ? '好事发生' : '破财消灾'}
               </Text>
             </View>
+            <Text className="block text-xs text-amber-600 text-center mt-3">
+              点击右上角关闭按钮结束本轮
+            </Text>
           </View>
         ) : (
           /* 选项列表 - 用户选择 */
@@ -644,13 +655,60 @@ const IndexPage = () => {
         />
       </Dialog>
 
-      {/* 事件弹窗 - 用户选择后关闭 */}
+      {/* 事件弹窗 - 用户选择后手动关闭 */}
       <Dialog open={showEventDialog} onOpenChange={(open) => {
-        // 事件弹窗通过用户选择后自动关闭，这里只处理意外关闭（不应该发生）
-        if (!open) {
-          setShowEventDialog(false);
+        // 只有在选择后（currentEventResult 不为空）才允许关闭
+        if (!open && currentEventResult) {
+          // 关闭弹窗时执行结算逻辑
+          if (user) {
+            const { option, moneyChange } = currentEventResult;
+            const newBalance = user.balance + moneyChange;
+            const moralChange = option.moralValue;
+            
+            // 更新余额和道德值
+            updateBalance(moneyChange, moralChange, currentEvent?.title || '', option.description, currentLocation?.name);
+            setLastChange(moneyChange);
+            
+            // 同步到后端
+            Network.request({
+              url: '/api/game/record',
+              method: 'POST',
+              data: {
+                userId: user.id,
+                eventTitle: currentEvent?.title || '',
+                eventResult: option.description,
+                moneyChange,
+                moralChange,
+                balance: newBalance,
+                moralValue: user.moralValue + moralChange,
+                locationName: currentLocation?.name || user.location.city,
+              }
+            });
+            
+            // 检查余额是否为负数，是则重新开始
+            if (newBalance <= 0) {
+              setGameStatus('GAME_OVER');
+              Taro.showModal({
+                title: '破产了！',
+                content: '你的钱花光了，游戏结束！是否重新开始？',
+                confirmText: '重新开始',
+                cancelText: '查看排名',
+                success: (res) => {
+                  if (res.confirm) {
+                    // 重新开始
+                    useGameStore.getState().setUser(null);
+                    useGameStore.setState({ gameStatus: 'INIT' });
+                  }
+                }
+              });
+            }
+          }
           setCurrentEvent(null);
           setCurrentEventResult(null);
+          setShowEventDialog(false);
+        } else if (!open && !currentEventResult) {
+          // 用户还没选择，阻止关闭
+          setShowEventDialog(true);
         }
       }}
       >
@@ -661,56 +719,8 @@ const IndexPage = () => {
               locationName={currentLocation?.name || user.location.city}
               selectedOption={currentEventResult}
               onSelect={(option, moneyChange) => {
-                // 用户选择后设置结果
+                // 用户选择后设置结果，等待用户手动关闭
                 setCurrentEventResult({ option, moneyChange });
-                // 1秒后自动关闭弹窗并结算
-                setTimeout(() => {
-                  if (user) {
-                    const newBalance = user.balance + moneyChange;
-                    const moralChange = option.moralValue;
-                    
-                    // 更新余额和道德值
-                    updateBalance(moneyChange, moralChange, currentEvent.title, option.description, currentLocation?.name);
-                    setLastChange(moneyChange);
-                    
-                    // 同步到后端
-                    Network.request({
-                      url: '/api/game/record',
-                      method: 'POST',
-                      data: {
-                        userId: user.id,
-                        eventTitle: currentEvent.title,
-                        eventResult: option.description,
-                        moneyChange,
-                        moralChange,
-                        balance: newBalance,
-                        moralValue: user.moralValue + moralChange,
-                        locationName: currentLocation?.name || user.location.city,
-                      }
-                    });
-                    
-                    // 检查余额是否为负数，是则重新开始
-                    if (newBalance <= 0) {
-                      setGameStatus('GAME_OVER');
-                      Taro.showModal({
-                        title: '破产了！',
-                        content: '你的钱花光了，游戏结束！是否重新开始？',
-                        confirmText: '重新开始',
-                        cancelText: '查看排名',
-                        success: (res) => {
-                          if (res.confirm) {
-                            // 重新开始
-                            useGameStore.getState().setUser(null);
-                            useGameStore.setState({ gameStatus: 'INIT' });
-                          }
-                        }
-                      });
-                    }
-                  }
-                  setShowEventDialog(false);
-                  setCurrentEvent(null);
-                  setCurrentEventResult(null);
-                }, 1500);
               }}
             />
           )}
