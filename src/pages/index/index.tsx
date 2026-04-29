@@ -11,7 +11,7 @@ import {
   RefreshCw, User, Map, Navigation, Store
 } from 'lucide-react-taro';
 import { chinaProvinces, type Province, type City, type District } from '@/data/china-cities';
-import { getWeightedRandomEvent, getRandomOption, type GameEvent } from '@/data/game-events';
+import { getWeightedRandomEvent, getRandomOption, type GameEvent, type GameEventOption } from '@/data/game-events';
 import { useGameStore, initializeUser, type RankingInfo } from '@/store/game-store';
 import { Network } from '@/network';
 import './index.css';
@@ -319,10 +319,12 @@ const MoneyDisplay = ({ balance, change }: { balance: number; change?: number })
 // 事件卡片组件 - 系统自动选择结果展示
 const EventCard = ({ 
   event, 
-  locationName
+  locationName,
+  onResultCalculated
 }: { 
   event: GameEvent; 
   locationName: string;
+  onResultCalculated: (option: GameEventOption, moneyChange: number) => void;
 }) => {
   const [selectedOption, setSelectedOption] = useState<{ text: string; description: string; moneyChange: number } | null>(null);
   
@@ -335,9 +337,11 @@ const EventCard = ({
         description: result.option.description,
         moneyChange: result.moneyChange,
       });
+      // 通知父组件计算结果
+      onResultCalculated(result.option, result.moneyChange);
     }, 1500); // 1.5秒后显示结果
     return () => clearTimeout(timer);
-  }, [event]);
+  }, [event, onResultCalculated]);
   
   const getTypeColor = (type: string) => {
     switch (type) {
@@ -439,6 +443,7 @@ const IndexPage = () => {
   const [showLocationPicker, setShowLocationPicker] = useState(false);
   const [lastChange, setLastChange] = useState<number | undefined>(undefined);
   const [currentLocation, setCurrentLocation] = useState<District | null>(null);
+  const [currentEventResult, setCurrentEventResult] = useState<{ option: GameEventOption; moneyChange: number } | null>(null);
   
   // 获取当前城市的区域列表
   const getCurrentDistricts = (): District[] => {
@@ -645,15 +650,18 @@ const IndexPage = () => {
             <EventCard 
               event={currentEvent} 
               locationName={currentLocation?.name || user.location.city}
+              onResultCalculated={(option, moneyChange) => {
+                setCurrentEventResult({ option, moneyChange });
+              }}
             />
           )}
           {/* 关闭按钮 - 点击后结算事件 */}
           <Button 
             className="w-full mt-4 bg-amber-500 hover:bg-amber-600 text-white"
             onClick={() => {
-              // 执行事件结算逻辑
-              if (currentEvent && user) {
-                const { option, moneyChange } = getRandomOption(currentEvent);
+              // 执行事件结算逻辑 - 使用已计算的结果
+              if (currentEvent && user && currentEventResult) {
+                const { option, moneyChange } = currentEventResult;
                 const newBalance = user.balance + moneyChange;
                 updateBalance(moneyChange, currentEvent.title, option.description, currentLocation?.name);
                 setLastChange(moneyChange);
@@ -677,6 +685,7 @@ const IndexPage = () => {
               }
               setShowEventDialog(false);
               setCurrentEvent(null);
+              setCurrentEventResult(null);
             }}
           >
             <Text>关闭</Text>
