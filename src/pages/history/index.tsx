@@ -24,20 +24,24 @@ export default function History() {
   const localRecords = user?.dailyRecords || [];
 
   useEffect(() => {
-    // 优先使用本地存储的数据，同时尝试从后端获取
-    if (localRecords.length > 0) {
-      setRecords(localRecords.map((r, i) => ({
+    // 直接使用本地存储的dailyRecords数据
+    if (localRecords && localRecords.length >= 0) {
+      const mappedRecords = localRecords.map((r, i) => ({
         ...r,
         id: r.eventTitle + i,
         eventTitle: r.eventTitle || '未知事件',
         eventResult: r.eventResult || '无描述',
         locationName: r.locationName || user?.location?.city || '未知地点',
         createdAt: r.date || new Date().toISOString(),
-      })));
-      setLoading(false);
+      }));
+      // 倒序显示，最新的在前
+      setRecords(mappedRecords.reverse());
+    } else {
+      setRecords([]);
     }
+    setLoading(false);
     fetchHistory();
-  }, [user]);
+  }, [user, localRecords]);
 
   const fetchHistory = async () => {
     if (!user) return;
