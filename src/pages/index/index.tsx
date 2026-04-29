@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import Taro from '@tarojs/taro';
 import { 
@@ -446,7 +447,7 @@ const EventCard = ({
 
 // 主页面组件
 const IndexPage = () => {
-  const { user, gameStatus, setGameStatus, updateBalance, setCurrentEvent, currentEvent, setRanking } = useGameStore();
+  const { user, gameStatus, setGameStatus, updateBalance, setCurrentEvent, currentEvent, setRanking, resetGame } = useGameStore();
   
   // 出生地选择状态
   const [selectedProvince, setSelectedProvince] = useState<Province | null>(null);
@@ -459,6 +460,7 @@ const IndexPage = () => {
   const [lastChange, setLastChange] = useState<number | undefined>(undefined);
   const [currentLocation, setCurrentLocation] = useState<District | null>(null);
   const [currentEventResult, setCurrentEventResult] = useState<{ option: GameEventOption; moneyChange: number } | null>(null);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
   
   // 获取当前城市的区域列表
   const getCurrentDistricts = (): District[] => {
@@ -681,12 +683,22 @@ const IndexPage = () => {
               </View>
             </View>
           </View>
-          {/* 道德值显示 */}
-          <View className="flex items-center gap-2 bg-amber-500 rounded-full px-3 py-1">
-            <Heart size={14} color="#ffffff" />
-            <Text className="text-white text-sm font-bold">
-              {user?.moralValue ?? 50}
-            </Text>
+          {/* 道德值和重新开始 */}
+          <View className="flex items-center gap-2">
+            <View className="flex items-center gap-2 bg-amber-500 rounded-full px-3 py-1">
+              <Heart size={14} color="#ffffff" />
+              <Text className="text-white text-sm font-bold">
+                {user?.moralValue ?? 50}
+              </Text>
+            </View>
+            <Button 
+              variant="ghost" 
+              size="sm"
+              className="p-1 h-7 min-w-7"
+              onClick={() => setShowResetConfirm(true)}
+            >
+              <RefreshCw size={14} color="#ffffff" />
+            </Button>
           </View>
         </View>
         
@@ -748,6 +760,33 @@ const IndexPage = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* 重新开始确认弹窗 */}
+      <AlertDialog open={showResetConfirm} onOpenChange={setShowResetConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>确认重新开始？</AlertDialogTitle>
+            <AlertDialogDescription>
+              重新开始将会清除所有进度，你将从100块钱重新开始游戏。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setShowResetConfirm(false)}>
+              取消
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                resetGame();
+                setShowResetConfirm(false);
+                setLastChange(undefined);
+                setCurrentLocation(null);
+              }}
+            >
+              确认重置
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
     </View>
   );
