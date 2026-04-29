@@ -144,4 +144,97 @@ export class GameService {
   async getUserRecords(userId: string): Promise<DailyRecord[]> {
     return this.dailyRecords.filter(r => r.userId === userId);
   }
+
+  // 获取所有城市排行榜
+  async getCityRankings(cityCode: string): Promise<any[]> {
+    const allUsers = Array.from(this.users.values());
+    const cityUsers = allUsers
+      .filter(u => u.cityCode === cityCode)
+      .sort((a, b) => b.balance - a.balance)
+      .slice(0, 100);
+
+    return cityUsers.map((u, index) => ({
+      userId: u.userId,
+      nickname: u.nickname,
+      balance: u.balance,
+      day: u.day,
+      city: u.cityName,
+      province: u.provinceName,
+      rank: index + 1,
+      rankType: 'city' as const,
+    }));
+  }
+
+  // 获取所有省份排行榜
+  async getProvinceRankings(provinceCode: string): Promise<any[]> {
+    const allUsers = Array.from(this.users.values());
+    const provinceUsers = allUsers
+      .filter(u => u.provinceCode === provinceCode)
+      .sort((a, b) => b.balance - a.balance)
+      .slice(0, 100);
+
+    return provinceUsers.map((u, index) => ({
+      userId: u.userId,
+      nickname: u.nickname,
+      balance: u.balance,
+      day: u.day,
+      city: u.cityName,
+      province: u.provinceName,
+      rank: index + 1,
+      rankType: 'province' as const,
+    }));
+  }
+
+  // 获取全国排行榜
+  async getNationalRankings(): Promise<any[]> {
+    const allUsers = Array.from(this.users.values());
+    const sortedUsers = allUsers
+      .sort((a, b) => b.balance - a.balance)
+      .slice(0, 100);
+
+    return sortedUsers.map((u, index) => ({
+      userId: u.userId,
+      nickname: u.nickname,
+      balance: u.balance,
+      day: u.day,
+      city: u.cityName,
+      province: u.provinceName,
+      rank: index + 1,
+      rankType: 'national' as const,
+    }));
+  }
+
+  // 汇总所有排行榜数据
+  async summaryAllRankings(): Promise<{
+    totalUsers: number;
+    totalMoney: number;
+    avgBalance: number;
+    richestUser: { nickname: string; balance: number } | null;
+    cityCount: number;
+    provinceCount: number;
+  }> {
+    const allUsers = Array.from(this.users.values());
+    const totalUsers = allUsers.length;
+    const totalMoney = allUsers.reduce((sum, u) => sum + u.balance, 0);
+    const avgBalance = totalUsers > 0 ? Math.round(totalMoney / totalUsers) : 0;
+    
+    // 找出最富有的用户
+    const sortedUsers = allUsers.sort((a, b) => b.balance - a.balance);
+    const richestUser = sortedUsers.length > 0 
+      ? { nickname: sortedUsers[0].nickname, balance: sortedUsers[0].balance }
+      : null;
+    
+    // 统计城市和省份数量
+    const citySet = new Set(allUsers.map(u => u.cityCode));
+    const provinceSet = new Set(allUsers.map(u => u.provinceCode));
+
+    return {
+      totalUsers,
+      totalMoney,
+      avgBalance,
+      richestUser,
+      cityCount: citySet.size,
+      provinceCount: provinceSet.size,
+    };
+  }
 }

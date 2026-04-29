@@ -154,4 +154,29 @@ export class GameController {
       data: records,
     };
   }
+
+  /**
+   * 汇总排行榜数据
+   * 汇总所有用户的数据到排行榜
+   */
+  @Post('rankings/summary')
+  async summaryRankings() {
+    console.log('[Game] POST /api/game/rankings/summary - 汇总排行榜:', {
+      url: '/api/game/rankings/summary',
+      method: 'POST'
+    });
+    
+    const result = await this.gameService.summaryAllRankings();
+    
+    console.log('[Game] POST /api/game/rankings/summary - 响应:', {
+      code: 200,
+      data: result
+    });
+    
+    return {
+      code: 200,
+      msg: 'success',
+      data: result,
+    };
+  }
 }

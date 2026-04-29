@@ -2,9 +2,11 @@ import { View, Text, ScrollView } from '@tarojs/components';
 import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Trophy, Medal, Crown, User } from 'lucide-react-taro';
+import { Trophy, Medal, Crown, User, RefreshCw, TrendingUp, Users, DollarSign } from 'lucide-react-taro';
 import { Network } from '@/network';
 import { useGameStore } from '@/store/game-store';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 import './index.css';
 
 interface RankingUser {
@@ -18,12 +20,24 @@ interface RankingUser {
   rankType: 'city' | 'province' | 'national';
 }
 
+interface SummaryData {
+  totalUsers: number;
+  totalMoney: number;
+  avgBalance: number;
+  richestUser: { nickname: string; balance: number } | null;
+  cityCount: number;
+  provinceCount: number;
+}
+
 export default function Ranking() {
   const [activeTab, setActiveTab] = useState<'city' | 'province' | 'national'>('city');
   const [cityRankings, setCityRankings] = useState<RankingUser[]>([]);
   const [provinceRankings, setProvinceRankings] = useState<RankingUser[]>([]);
   const [nationalRankings, setNationalRankings] = useState<RankingUser[]>([]);
   const [loading, setLoading] = useState(true);
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const [showSummary, setShowSummary] = useState(false);
+  const [summaryData, setSummaryData] = useState<SummaryData | null>(null);
   const user = useGameStore((state) => state.user);
 
   useEffect(() => {
@@ -47,6 +61,25 @@ export default function Ranking() {
       console.error('获取排行榜失败:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSummaryRankings = async () => {
+    setSummaryLoading(true);
+    try {
+      const res = await Network.request({
+        url: '/api/game/rankings/summary',
+        method: 'POST',
+      });
+      
+      if (res.data?.code === 200) {
+        setSummaryData(res.data.data);
+        setShowSummary(true);
+      }
+    } catch (error) {
+      console.error('汇总排行榜失败:', error);
+    } finally {
+      setSummaryLoading(false);
     }
   };
 
@@ -80,12 +113,104 @@ export default function Ranking() {
     <View className="min-h-screen bg-gradient-to-b from-amber-50 to-orange-50">
       {/* 头部 */}
       <View className="bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-6">
-        <View className="flex items-center gap-2 mb-2">
-          <Trophy size={24} color="#fff" />
-          <Text className="text-xl font-bold text-white">财富排行榜</Text>
+        <View className="flex items-center justify-between mb-2">
+          <View className="flex items-center gap-2">
+            <Trophy size={24} color="#fff" />
+            <Text className="text-xl font-bold text-white">财富排行榜</Text>
+          </View>
+          <View 
+            className="bg-white bg-opacity-20 px-3 py-2 rounded-lg flex items-center gap-1"
+            onClick={handleSummaryRankings}
+          >
+            <RefreshCw size={14} color="#fff" className={summaryLoading ? 'animate-spin' : ''} />
+            <Text className="text-white text-xs">汇总</Text>
+          </View>
         </View>
         <Text className="text-amber-100 text-sm">实时排名，每日18点更新</Text>
       </View>
+
+      {/* 汇总弹窗 */}
+      <Dialog open={showSummary} onOpenChange={setShowSummary}>
+        <DialogContent className="max-w-sm mx-auto bg-white">
+          <View className="text-center mb-4">
+            <Text className="block text-xl font-bold text-gray-800">排行榜汇总</Text>
+            <Text className="block text-sm text-gray-500 mt-1">所有玩家数据统计</Text>
+          </View>
+          
+          {summaryData && (
+            <View className="space-y-2">
+              {/* 总人数 */}
+              <View className="bg-blue-50 rounded-xl p-4 flex items-center gap-3">
+                <View className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center">
+                  <Users size={20} color="#fff" />
+                </View>
+                <View className="flex-1">
+                  <Text className="block text-sm text-gray-500">参与玩家</Text>
+                  <Text className="block text-xl font-bold text-blue-600">{summaryData.totalUsers} 人</Text>
+                </View>
+              </View>
+
+              {/* 总财富 */}
+              <View className="bg-green-50 rounded-xl p-4 flex items-center gap-3">
+                <View className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center">
+                  <DollarSign size={20} color="#fff" />
+                </View>
+                <View className="flex-1">
+                  <Text className="block text-sm text-gray-500">总财富值</Text>
+                  <Text className="block text-xl font-bold text-green-600">¥{summaryData.totalMoney.toLocaleString()}</Text>
+                </View>
+              </View>
+
+              {/* 平均财富 */}
+              <View className="bg-purple-50 rounded-xl p-4 flex items-center gap-3">
+                <View className="w-10 h-10 rounded-full bg-purple-500 flex items-center justify-center">
+                  <TrendingUp size={20} color="#fff" />
+                </View>
+                <View className="flex-1">
+                  <Text className="block text-sm text-gray-500">平均财富</Text>
+                  <Text className="block text-xl font-bold text-purple-600">¥{summaryData.avgBalance.toLocaleString()}</Text>
+                </View>
+              </View>
+
+              {/* 首富 */}
+              {summaryData.richestUser && (
+                <View className="bg-amber-50 rounded-xl p-4 flex items-center gap-3">
+                  <View className="w-10 h-10 rounded-full bg-amber-500 flex items-center justify-center">
+                    <Crown size={20} color="#fff" />
+                  </View>
+                  <View className="flex-1">
+                    <Text className="block text-sm text-gray-500">首富</Text>
+                    <Text className="block text-lg font-bold text-amber-600">
+                      {summaryData.richestUser.nickname}
+                    </Text>
+                    <Text className="block text-sm text-amber-500">
+                      ¥{summaryData.richestUser.balance.toLocaleString()}
+                    </Text>
+                  </View>
+                </View>
+              )}
+
+              {/* 分布统计 */}
+              <View className="flex gap-2">
+                <View className="flex-1 bg-gray-50 rounded-xl p-3 text-center">
+                  <Text className="block text-2xl font-bold text-gray-700">{summaryData.cityCount}</Text>
+                  <Text className="block text-xs text-gray-500">覆盖城市</Text>
+                </View>
+                <View className="flex-1 bg-gray-50 rounded-xl p-3 text-center">
+                  <Text className="block text-2xl font-bold text-gray-700">{summaryData.provinceCount}</Text>
+                  <Text className="block text-xs text-gray-500">覆盖省份</Text>
+                </View>
+              </View>
+            </View>
+          )}
+
+          <View className="mt-4">
+            <Button className="w-full bg-amber-500" onClick={() => setShowSummary(false)}>
+              <Text className="text-white font-medium">关闭</Text>
+            </Button>
+          </View>
+        </DialogContent>
+      </Dialog>
 
       {/* 我的排名卡片 */}
       {user && (
