@@ -2,7 +2,6 @@ import { View, Text, ScrollView } from '@tarojs/components';
 import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Calendar, TrendingUp, TrendingDown, MapPin, Clock, RefreshCw } from 'lucide-react-taro';
-import { Network } from '@/network';
 import { useGameStore } from '@/store/game-store';
 import './index.css';
 
@@ -21,49 +20,48 @@ export default function History() {
   const [records, setRecords] = useState<HistoryRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const user = useGameStore((state) => state.user);
-  const localRecords = user?.dailyRecords || [];
 
+  // 监听store变化，实时同步数据
   useEffect(() => {
-    // 优先使用本地存储的数据，同时尝试从后端获取
-    if (localRecords.length > 0) {
-      setRecords(localRecords.map((r, i) => ({
-        ...r,
-        id: r.eventTitle + i,
+    loadRecords();
+  }, [user?.dailyRecords, user?.balance, user?.day]);
+
+  const loadRecords = () => {
+    if (!user) {
+      setRecords([]);
+      setLoading(false);
+      return;
+    }
+    
+    // 从本地store获取所有历史记录
+    const localRecords = user.dailyRecords || [];
+    
+    // 转换为HistoryRecord格式并按时间倒序排列
+    const formattedRecords: HistoryRecord[] = localRecords
+      .map((r, i) => ({
+        id: `record_${i}_${r.date || Date.now()}`,
+        day: r.day || user.day - localRecords.length + i + 1,
         eventTitle: r.eventTitle || '未知事件',
         eventResult: r.eventResult || '无描述',
-        locationName: r.locationName || user?.location?.city || '未知地点',
-        createdAt: r.date || new Date().toISOString(),
-      })));
-      setLoading(false);
-    }
-    fetchHistory();
-  }, [user]);
-
-  const fetchHistory = async () => {
-    if (!user) return;
-    
-    setLoading(true);
-    try {
-      const res = await Network.request({
-        url: '/api/game/history',
-        method: 'GET',
-        data: { userId: user.id },
+        moneyChange: r.moneyChange || 0,
+        balance: r.balance || user.balance,
+        locationName: r.locationName || user.location?.city || '未知地点',
+        createdAt: r.date || new Date(Date.now() - i * 1000).toISOString(),
+      }))
+      .sort((a, b) => {
+        // 按时间倒序排列（最新的在前）
+        const dateA = new Date(a.createdAt).getTime();
+        const dateB = new Date(b.createdAt).getTime();
+        return dateB - dateA;
       });
-      
-      if (res.data?.code === 200 && res.data.data?.length > 0) {
-        // 后端数据优先
-        setRecords(res.data.data);
-      }
-    } catch (error) {
-      console.error('获取历史记录失败:', error);
-    } finally {
-      setLoading(false);
-    }
+    
+    setRecords(formattedRecords);
+    setLoading(false);
   };
 
   // 手动刷新历史记录
   const handleRefresh = () => {
-    fetchHistory();
+    loadRecords();
   };
 
   const getDaySummary = () => {
