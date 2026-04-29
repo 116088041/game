@@ -638,17 +638,26 @@ const IndexPage = () => {
     <View className="min-h-screen bg-gray-50">
       {/* 街溜子行走动画 */}
       <View className="w-full aspect-video bg-gradient-to-b from-sky-200 to-sky-100 relative overflow-hidden">
-        <Video
-          className="w-full h-full"
-          src="https://coze-coding-project.tos.coze.site/coze_storage_7634003127947231295/video/video_generate_cgt-20260429114640-zb8m6.mp4"
-          controls={false}
-          autoplay={false}
-          loop
-          showCenterPlayBtn={false}
-          showPlayBtn={false}
-          enableProgressGesture={false}
-          objectFit="cover"
-        />
+        {Taro.getEnv() === Taro.ENV_TYPE.WEAPP || Taro.getEnv() === Taro.ENV_TYPE.TT ? (
+          <Video
+            className="w-full h-full"
+            src="https://coze-coding-project.tos.coze.site/coze_storage_7634003127947231295/video/video_generate_cgt-20260429114640-zb8m6.mp4"
+            controls={false}
+            autoplay={false}
+            loop
+            showCenterPlayBtn={false}
+            showPlayBtn={false}
+            enableProgressGesture={false}
+            objectFit="cover"
+          />
+        ) : (
+          <View className="w-full h-full flex items-center justify-center bg-gradient-to-b from-sky-300 to-sky-200">
+            <View className="text-center">
+              <View className="text-6xl mb-2">🚶</View>
+              <Text className="block text-sky-600 text-sm">街溜子街头漫步</Text>
+            </View>
+          </View>
+        )}
         <View className="absolute bottom-2 left-2 bg-black bg-opacity-50 rounded px-2 py-1">
           <Text className="text-white text-xs">街溜子街头漫步</Text>
         </View>
