@@ -294,13 +294,13 @@ const LocationPicker = ({
 };
 
 // 资金展示组件
-const MoneyDisplay = ({ balance, change }: { balance: number; change?: number }) => (
+const MoneyDisplay = ({ balance, change }: { balance: number; change?: number | null }) => (
   <View className="flex items-center gap-2">
     <Coins size={24} color="#f59e0b" />
     <Text className="text-2xl font-bold text-amber-600">
       ¥{balance.toFixed(2)}
     </Text>
-    {typeof change === 'number' && change !== 0 && (
+    {change !== undefined && change !== null && change !== 0 && (
       <View className={`flex items-center gap-1 px-2 py-1 rounded-full ${change > 0 ? 'bg-green-100' : 'bg-red-100'}`}>
         {change > 0 ? <TrendingUp size={14} color="#16a34a" /> : <TrendingDown size={14} color="#dc2626" />}
         <Text className={`text-sm font-medium ${change > 0 ? 'text-green-600' : 'text-red-600'}`}>
@@ -680,9 +680,9 @@ const IndexPage = () => {
           </View>
           {/* 道德值显示 */}
           <View className="flex items-center gap-2 bg-white bg-opacity-20 rounded-full px-3 py-1">
-            <Heart size={14} color={user.moralValue >= 0 ? '#ffffff' : '#ff6b6b'} />
+            <Heart size={14} color={user?.moralValue >= 0 ? '#ffffff' : '#ff6b6b'} />
             <Text className="text-white text-sm font-medium">
-              {typeof user.moralValue === 'number' ? (user.moralValue >= 0 ? '+' : '') + user.moralValue : '+50'}
+              {(user?.moralValue ?? 50) >= 0 ? '+' : ''}{user?.moralValue ?? 50}
             </Text>
           </View>
         </View>
