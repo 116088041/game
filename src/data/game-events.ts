@@ -234,40 +234,40 @@ export const gameEvents: GameEvent[] = [
 // moralValue: 道德值，范围 -100 到 +100
 export const getWeightedRandomEventByMoral = (moralValue: number = 0): GameEvent => {
   // 道德值影响事件类型权重
-  // 道德值高 -> 更多好事件（work, opportunity, specialIncome）
-  // 道德值低 -> 更多坏事件（risk, consumption, specialExpense）
+  // 道德值高 -> 更多好事件（work, opportunity）
+  // 道德值低 -> 更多坏事件（risk, consumption）
   
   // 将道德值转换为权重调整因子 (-1 到 1)
   const moralFactor = Math.max(-1, Math.min(1, moralValue / 100));
   
-  // 计算各类事件的权重 - 调整比例让坏事件更容易触发
-  const storyWeight = 0.35; // 搞笑故事事件
-  const goodEventWeight = 0.2 + (moralFactor * 0.1); // 好事件：降低基础权重
-  const badEventWeight = 0.25 - (moralFactor * 0.05); // 坏事件：增加基础权重
-  const specialGoodWeight = 0.05 + (moralFactor * 0.03); // 特殊好事件：大幅降低
+  // 计算各类事件的权重 - risk占80%
+  const storyWeight = 0.05; // 搞笑故事事件：5%
+  const goodEventWeight = Math.max(0.05, 0.15 + (moralFactor * 0.1)); // 好事件：5%-25%
+  // 剩余75%-95%都是risk事件
   
   const roll = Math.random();
   
   if (roll < storyWeight) {
-    // 35% 超级搞笑故事事件
+    // 5% 超级搞笑故事事件
     const storyEvents = gameEvents.filter(e => e.id.startsWith('s'));
     return storyEvents[Math.floor(Math.random() * storyEvents.length)];
   } else if (roll < storyWeight + goodEventWeight) {
-    // 好事件：work, opportunity
+    // 好事件：work, opportunity（根据道德值调整5%-25%）
     const goodEvents = gameEvents.filter(e => e.type === 'work' || e.type === 'opportunity');
+    if (goodEvents.length === 0) {
+      // 如果没有好事件，返回risk事件
+      const riskEvents = gameEvents.filter(e => e.type === 'risk');
+      return riskEvents[Math.floor(Math.random() * riskEvents.length)];
+    }
     return goodEvents[Math.floor(Math.random() * goodEvents.length)];
-  } else if (roll < storyWeight + goodEventWeight + badEventWeight) {
-    // 坏事件：consumption, risk
-    const badEvents = gameEvents.filter(e => e.type === 'consumption' || e.type === 'risk');
-    return badEvents[Math.floor(Math.random() * badEvents.length)];
-  } else if (roll < storyWeight + goodEventWeight + badEventWeight + specialGoodWeight) {
-    // 特殊好事件
-    const specialGood = gameEvents.filter(e => e.id.startsWith('sp'));
-    return specialGood[Math.floor(Math.random() * specialGood.length)];
   } else {
-    // 特殊坏事件
-    const specialBad = gameEvents.filter(e => e.id.startsWith('se'));
-    return specialBad[Math.floor(Math.random() * specialBad.length)];
+    // 风险事件：固定80%
+    const riskEvents = gameEvents.filter(e => e.type === 'risk');
+    if (riskEvents.length === 0) {
+      // 如果没有risk事件，返回任意事件
+      return gameEvents[Math.floor(Math.random() * gameEvents.length)];
+    }
+    return riskEvents[Math.floor(Math.random() * riskEvents.length)];
   }
 };
 
