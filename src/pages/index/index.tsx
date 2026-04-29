@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import Taro from '@tarojs/taro';
 import { 
   Coins, MapPin, Calendar, TrendingUp, 
-  TrendingDown, CircleAlert, Zap, Crown, Building,
+  TrendingDown, CircleAlert, Zap, Building,
   RefreshCw, User, Map, Navigation, Store
 } from 'lucide-react-taro';
 import { chinaProvinces, type Province, type City, type District } from '@/data/china-cities';
@@ -316,40 +316,6 @@ const MoneyDisplay = ({ balance, change }: { balance: number; change?: number })
   </View>
 );
 
-// 排名卡片组件
-const RankingCard = ({ 
-  title, 
-  icon: Icon, 
-  rank, 
-  total, 
-  richest 
-}: { 
-  title: string; 
-  icon: any; 
-  rank: number; 
-  total: number; 
-  richest: { nickname: string; balance: number } | null | undefined;
-}) => (
-  <Card className="flex-1">
-    <CardContent className="p-3">
-      <View className="flex items-center gap-2 mb-2">
-        <Icon size={16} color="#f59e0b" />
-        <Text className="block text-sm font-medium text-gray-700">{title}</Text>
-      </View>
-      <Text className="block text-xl font-bold text-gray-800">
-        第{rank}名 <Text className="text-sm font-normal text-gray-400">/ 共{total}人</Text>
-      </Text>
-      {richest && (
-        <View className="mt-2 pt-2 border-t border-gray-100">
-          <Text className="block text-xs text-gray-400">当前首富</Text>
-          <Text className="block text-sm font-medium text-amber-600 truncate">{richest.nickname}</Text>
-          <Text className="block text-xs text-amber-500">¥{richest.balance.toFixed(2)}</Text>
-        </View>
-      )}
-    </CardContent>
-  </Card>
-);
-
 // 事件卡片组件 - 系统自动选择结果展示
 const EventCard = ({ 
   event, 
@@ -459,34 +425,6 @@ const EventCard = ({
   );
 };
 
-// 每日记录卡片
-const DailyRecordCard = ({ record }: { record: any }) => (
-  <Card className="mb-2">
-    <CardContent className="p-3">
-      <View className="flex items-center justify-between">
-        <View className="flex items-center gap-2">
-          <View className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center">
-            <Text className="text-sm font-bold text-amber-600">第{record.day}天</Text>
-          </View>
-          <View>
-            <Text className="block text-sm font-medium text-gray-800">{record.eventTitle}</Text>
-            <Text className="block text-xs text-gray-400">{record.eventResult}</Text>
-            {record.locationName && (
-              <View className="flex items-center gap-1 mt-1">
-                <MapPin size={10} color="#9ca3af" />
-                <Text className="text-xs text-gray-400">{record.locationName}</Text>
-              </View>
-            )}
-          </View>
-        </View>
-        <Text className={`text-base font-bold ${record.moneyChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-          {record.moneyChange >= 0 ? '+' : ''}{record.moneyChange}元
-        </Text>
-      </View>
-    </CardContent>
-  </Card>
-);
-
 // 主页面组件
 const IndexPage = () => {
   const { user, gameStatus, setGameStatus, updateBalance, setCurrentEvent, currentEvent, setRanking } = useGameStore();
@@ -498,8 +436,6 @@ const IndexPage = () => {
   
   // UI状态
   const [showEventDialog, setShowEventDialog] = useState(false);
-  const [showRankDialog, setShowRankDialog] = useState(false);
-  const [showHistoryDialog, setShowHistoryDialog] = useState(false);
   const [showLocationPicker, setShowLocationPicker] = useState(false);
   const [lastChange, setLastChange] = useState<number | undefined>(undefined);
   const [currentLocation, setCurrentLocation] = useState<District | null>(null);
@@ -748,86 +684,6 @@ const IndexPage = () => {
         </View>
       </Dialog>
 
-      {/* 排名弹窗 */}
-      <Dialog open={showRankDialog} onOpenChange={setShowRankDialog}>
-        <View className="p-4">
-          <Text className="block text-xl font-bold text-center mb-4 text-gray-800">排行榜</Text>
-          
-          <View className="flex gap-2 mb-4">
-            <RankingCard
-              title="城市"
-              icon={Building}
-              rank={useGameStore.getState().ranking?.cityRank || 1}
-              total={useGameStore.getState().ranking?.cityTotal || 100}
-              richest={useGameStore.getState().ranking?.cityRichest}
-            />
-            <RankingCard
-              title="省份"
-              icon={MapPin}
-              rank={useGameStore.getState().ranking?.provinceRank || 1}
-              total={useGameStore.getState().ranking?.provinceTotal || 1000}
-              richest={useGameStore.getState().ranking?.provinceRichest}
-            />
-          </View>
-          
-          <Card>
-            <CardContent className="p-3">
-              <View className="flex items-center gap-2 mb-2">
-                <Crown size={16} color="#eab308" />
-                <Text className="block text-sm font-medium text-gray-700">全国排名</Text>
-              </View>
-              <Text className="block text-2xl font-bold text-gray-800">
-                第{useGameStore.getState().ranking?.nationalRank || 1}名
-                <Text className="text-sm font-normal text-gray-400"> / 共{useGameStore.getState().ranking?.nationalTotal || 10000}人</Text>
-              </Text>
-              {useGameStore.getState().ranking?.nationalRichest && (
-                <View className="mt-2 pt-2 border-t border-gray-100">
-                  <Text className="block text-xs text-gray-400">全国首富</Text>
-                  <Text className="block text-sm font-bold text-yellow-600">
-                    {useGameStore.getState().ranking?.nationalRichest?.nickname}
-                  </Text>
-                  <Text className="block text-lg font-bold text-amber-500">
-                    ¥{useGameStore.getState().ranking?.nationalRichest?.balance.toFixed(2)}
-                  </Text>
-                </View>
-              )}
-            </CardContent>
-          </Card>
-          
-          <Button 
-            className="w-full mt-4 bg-amber-500 hover:bg-amber-600 text-white"
-            onClick={() => setShowRankDialog(false)}
-          >
-            <Text>知道了</Text>
-          </Button>
-        </View>
-      </Dialog>
-
-      {/* 历史记录弹窗 */}
-      <Dialog open={showHistoryDialog} onOpenChange={setShowHistoryDialog}>
-        <View className="p-4 max-h-96">
-          <Text className="block text-xl font-bold text-center mb-4 text-gray-800">历史记录</Text>
-          
-          <ScrollView scrollY className="max-h-72">
-            {user.dailyRecords.length === 0 ? (
-              <View className="text-center py-8">
-                <Text className="block text-gray-400">还没有记录，开始你的第一天吧！</Text>
-              </View>
-            ) : (
-              user.dailyRecords.slice().reverse().map((record, index) => (
-                <DailyRecordCard key={index} record={record} />
-              ))
-            )}
-          </ScrollView>
-          
-          <Button 
-            className="w-full mt-4 bg-amber-500 hover:bg-amber-600 text-white"
-            onClick={() => setShowHistoryDialog(false)}
-          >
-            <Text>关闭</Text>
-          </Button>
-        </View>
-      </Dialog>
     </View>
   );
 };
