@@ -234,13 +234,11 @@ const LocationSelector = ({
 const LocationPicker = ({ 
   districts, 
   selectedDistrict, 
-  onSelect,
-  onCancel
+  onSelect
 }: { 
   districts: District[]; 
   selectedDistrict: District | null;
   onSelect: (d: District) => void;
-  onCancel: () => void;
 }) => {
   return (
     <View className="p-4">
@@ -281,12 +279,9 @@ const LocationPicker = ({
         </View>
       </ScrollView>
 
-      <View className="flex gap-2 mt-4">
-        <Button variant="outline" className="flex-1" onClick={onCancel}>
-          <Text>取消</Text>
-        </Button>
+      <View className="mt-4">
         <Button 
-          className="flex-1 bg-amber-500 hover:bg-amber-600 text-white"
+          className="w-full bg-amber-500 hover:bg-amber-600 text-white"
           disabled={!selectedDistrict}
           onClick={() => selectedDistrict && onSelect(selectedDistrict)}
         >
@@ -320,11 +315,13 @@ const MoneyDisplay = ({ balance, change }: { balance: number; change?: number })
 const EventCard = ({ 
   event, 
   locationName,
-  onResultCalculated
+  onResultCalculated,
+  onClose
 }: { 
   event: GameEvent; 
   locationName: string;
   onResultCalculated: (option: GameEventOption, moneyChange: number) => void;
+  onClose: () => void;
 }) => {
   const [selectedOption, setSelectedOption] = useState<{ text: string; description: string; moneyChange: number } | null>(null);
   
@@ -339,9 +336,13 @@ const EventCard = ({
       });
       // 通知父组件计算结果
       onResultCalculated(result.option, result.moneyChange);
+      // 3秒后自动关闭
+      setTimeout(() => {
+        onClose();
+      }, 3000);
     }, 1500); // 1.5秒后显示结果
     return () => clearTimeout(timer);
-  }, [event, onResultCalculated]);
+  }, [event, onResultCalculated, onClose]);
   
   const getTypeColor = (type: string) => {
     switch (type) {
@@ -639,57 +640,48 @@ const IndexPage = () => {
           districts={getCurrentDistricts()}
           selectedDistrict={currentLocation}
           onSelect={handleSelectLocation}
-          onCancel={() => setShowLocationPicker(false)}
         />
       </Dialog>
 
-      {/* 事件弹窗 - 手动关闭 */}
+      {/* 事件弹窗 - 自动关闭 */}
       <Dialog open={showEventDialog} onOpenChange={setShowEventDialog}>
         <View className="p-4">
-          {currentEvent && (
+          {currentEvent && currentEventResult && (
             <EventCard 
               event={currentEvent} 
               locationName={currentLocation?.name || user.location.city}
               onResultCalculated={(option, moneyChange) => {
                 setCurrentEventResult({ option, moneyChange });
               }}
+              onClose={() => {
+                // 执行事件结算逻辑
+                if (user && currentEventResult) {
+                  const { option, moneyChange } = currentEventResult;
+                  const newBalance = user.balance + moneyChange;
+                  updateBalance(moneyChange, currentEvent.title, option.description, currentLocation?.name);
+                  setLastChange(moneyChange);
+                  
+                  // 同步到后端
+                  Network.request({
+                    url: '/api/game/record',
+                    method: 'POST',
+                    data: {
+                      userId: user.id,
+                      day: user.day,
+                      eventTitle: currentEvent.title,
+                      eventResult: option.description,
+                      moneyChange,
+                      balance: newBalance,
+                      locationName: currentLocation?.name || user.location.city,
+                    }
+                  });
+                }
+                setShowEventDialog(false);
+                setCurrentEvent(null);
+                setCurrentEventResult(null);
+              }}
             />
           )}
-          {/* 关闭按钮 - 点击后结算事件 */}
-          <Button 
-            className="w-full mt-4 bg-amber-500 hover:bg-amber-600 text-white"
-            onClick={() => {
-              // 执行事件结算逻辑 - 使用已计算的结果
-              if (currentEvent && user && currentEventResult) {
-                const { option, moneyChange } = currentEventResult;
-                const newBalance = user.balance + moneyChange;
-                updateBalance(moneyChange, currentEvent.title, option.description, currentLocation?.name);
-                setLastChange(moneyChange);
-                
-                // 同步到后端
-                Network.request({
-                  url: '/api/game/record',
-                  method: 'POST',
-                  data: {
-                    userId: user.id,
-                    day: user.day,
-                    eventTitle: currentEvent.title,
-                    eventResult: option.description,
-                    moneyChange,
-                    balance: newBalance,
-                    locationName: currentLocation?.name || user.location.city,
-                  }
-                }).then(() => {
-                  fetchRanking();
-                });
-              }
-              setShowEventDialog(false);
-              setCurrentEvent(null);
-              setCurrentEventResult(null);
-            }}
-          >
-            <Text>关闭</Text>
-          </Button>
         </View>
       </Dialog>
 
