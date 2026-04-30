@@ -182,12 +182,12 @@ export class GameController {
 
   // 获取花钱排行榜
   @Get('rankings/expense')
-  async getExpenseRankings(@Query('limit') limit?: string) {
+  async getExpenseRankings(@Query('userId') userId: string, @Query('limit') limit?: string) {
     const parsedLimit = limit ? parseInt(limit, 10) : 100;
     const rankings = await this.gameService.getExpenseRankings(parsedLimit);
     
     // 获取用户自己的排名
-    const myRank = await this.gameService.getUserExpenseRank(this.getUserId(request));
+    const myRank = await this.gameService.getUserExpenseRank(userId);
     
     return {
       code: 0,
@@ -202,12 +202,12 @@ export class GameController {
 
   // 获取赚钱排行榜
   @Get('rankings/income')
-  async getIncomeRankings(@Query('limit') limit?: string) {
+  async getIncomeRankings(@Query('userId') userId: string, @Query('limit') limit?: string) {
     const parsedLimit = limit ? parseInt(limit, 10) : 100;
     const rankings = await this.gameService.getIncomeRankings(parsedLimit);
     
     // 获取用户自己的排名
-    const myRank = await this.gameService.getUserIncomeRank(this.getUserId(request));
+    const myRank = await this.gameService.getUserIncomeRank(userId);
     
     return {
       code: 0,

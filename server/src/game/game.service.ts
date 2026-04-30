@@ -176,6 +176,14 @@ export class GameService {
       nationalRank: nationalRank || 1,
       nationalTotal: nationalUsers.length || 1,
       nationalRichest,
+      // 花钱排行榜
+      expenseRank: 0,
+      expenseTotal: 0,
+      topSpender: null,
+      // 赚钱排行榜
+      incomeRank: 0,
+      incomeTotal: 0,
+      topEarner: null,
     };
   }
 
