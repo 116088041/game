@@ -113,14 +113,33 @@ export class GameService {
     this.dailyRecords.push(record);
 
     // 更新用户的totalIncome和totalExpense
-    const user = this.users.get(data.userId);
-    if (user) {
-      if (data.moneyChange > 0) {
-        user.totalIncome = (user.totalIncome || 0) + data.moneyChange;
-      } else if (data.moneyChange < 0) {
-        user.totalExpense = (user.totalExpense || 0) + Math.abs(data.moneyChange);
-      }
+    let user = this.users.get(data.userId);
+    if (!user) {
+      // 如果用户不存在，创建一个默认用户记录
+      user = {
+        userId: data.userId,
+        nickname: `玩家${data.userId.slice(0, 6)}`,
+        cityCode: '',
+        cityName: data.locationName || '未知城市',
+        provinceCode: '',
+        provinceName: '未知省份',
+        balance: data.balance,
+        totalIncome: 0,
+        totalExpense: 0,
+        day: data.day || 1,
+        updatedAt: new Date(),
+      };
+      this.users.set(data.userId, user);
     }
+    
+    // 更新收入和支出
+    if (data.moneyChange > 0) {
+      user.totalIncome = (user.totalIncome || 0) + data.moneyChange;
+    } else if (data.moneyChange < 0) {
+      user.totalExpense = (user.totalExpense || 0) + Math.abs(data.moneyChange);
+    }
+    user.balance = data.balance;
+    user.day = data.day || user.day;
 
     return record;
   }
