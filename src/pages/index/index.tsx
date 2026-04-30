@@ -389,9 +389,10 @@ const EventCard = ({
           <Text className="text-sm text-amber-700">当前位置：{locationName}</Text>
         </View>
         
+        {/* 事件图标和标题 */}
         <View className="flex items-center gap-3 mb-4">
-          <View className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center">
-            <Text className="text-2xl">{getEventEmoji(event.type)}</Text>
+          <View className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center shadow-md">
+            <Text className="text-3xl">{event.icon || getEventEmoji(event.type)}</Text>
           </View>
           <View className="flex-1">
             <Text className="block text-lg font-bold text-gray-800">{event.title}</Text>
