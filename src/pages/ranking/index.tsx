@@ -52,16 +52,11 @@ export default function Ranking() {
 
   // 页面加载时获取所有排行榜数据
   useEffect(() => {
-    // 同时获取花钱和赚钱排行榜
+    // 同时获取所有5个排行榜
+    fetchRankings();
     fetchExpenseRankings();
     fetchIncomeRankings();
   }, []);
-
-  useEffect(() => {
-    if (['city', 'province', 'national'].includes(activeTab)) {
-      fetchRankings();
-    }
-  }, [activeTab]);
 
   const fetchRankings = async () => {
     setLoading(true);
