@@ -38,7 +38,7 @@ interface RankingResponse {
 }
 
 export default function Ranking() {
-  const [activeTab, setActiveTab] = useState<'city' | 'province' | 'national' | 'expense' | 'income'>('city');
+  const [activeTab, setActiveTab] = useState<'city' | 'province' | 'national' | 'expense' | 'income'>('expense');
   const [cityRankings, setCityRankings] = useState<RankingUser[]>([]);
   const [provinceRankings, setProvinceRankings] = useState<RankingUser[]>([]);
   const [nationalRankings, setNationalRankings] = useState<RankingUser[]>([]);
@@ -50,13 +50,16 @@ export default function Ranking() {
   const [summaryData, setSummaryData] = useState<SummaryData | null>(null);
   const user = useGameStore((state) => state.user);
 
+  // 页面加载时获取所有排行榜数据
+  useEffect(() => {
+    // 同时获取花钱和赚钱排行榜
+    fetchExpenseRankings();
+    fetchIncomeRankings();
+  }, []);
+
   useEffect(() => {
     if (['city', 'province', 'national'].includes(activeTab)) {
       fetchRankings();
-    } else if (activeTab === 'expense') {
-      fetchExpenseRankings();
-    } else if (activeTab === 'income') {
-      fetchIncomeRankings();
     }
   }, [activeTab]);
 
