@@ -135,9 +135,10 @@ export const useGameStore = create<GameState>()(
         };
         
         // 更新最近事件ID列表，最多保留100个用于去重
+        const existingRecentIds = user.recentEventIds || [];
         const newRecentEventIds = eventId !== undefined
-          ? [...user.recentEventIds, eventId].slice(-100)
-          : user.recentEventIds;
+          ? [...existingRecentIds, eventId].slice(-100)
+          : existingRecentIds;
         
         set({
           user: {
