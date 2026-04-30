@@ -31,6 +31,8 @@ export interface UserData {
   location: Location;
   balance: number;
   totalBalance: number;
+  totalIncome: number;   // 总收入
+  totalExpense: number;  // 总支出
   moralValue: number; // 道德值：-100 到 100
   startDate: string;
   dailyRecords: DailyRecord[];
@@ -99,7 +101,9 @@ const createInitialUser = (nickname: string, location: Location): UserData => {
     moralValue: 50, // 初始道德值为50
     startDate: now.toISOString().split('T')[0],
     dailyRecords: [],
-    recentEventIds: [] // 初始为空数组
+    recentEventIds: [], // 初始为空数组
+    totalIncome: 0,
+    totalExpense: 0
   };
 };
 
