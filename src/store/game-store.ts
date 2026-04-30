@@ -34,6 +34,7 @@ export interface UserData {
   moralValue: number; // 道德值：-100 到 100
   startDate: string;
   dailyRecords: DailyRecord[];
+  recentEventIds: string[]; // 最近100次触发的事件ID，用于去重
 }
 
 // 排名信息
@@ -69,7 +70,7 @@ interface GameState {
   
   // 动作
   setUser: (user: UserData | null) => void;
-  updateBalance: (change: number, moralChange: number, eventTitle: string, eventResult: string, locationName?: string) => void;
+  updateBalance: (change: number, moralChange: number, eventTitle: string, eventResult: string, locationName?: string, eventId?: string) => void;
   setGameStatus: (status: GameStatus) => void;
   setCurrentEvent: (event: any | null) => void;
   setRanking: (ranking: RankingInfo | null) => void;
@@ -97,7 +98,8 @@ const createInitialUser = (nickname: string, location: Location): UserData => {
     totalBalance: 100,
     moralValue: 50, // 初始道德值为50
     startDate: now.toISOString().split('T')[0],
-    dailyRecords: []
+    dailyRecords: [],
+    recentEventIds: [] // 初始为空数组
   };
 };
 
@@ -113,7 +115,7 @@ export const useGameStore = create<GameState>()(
       
       setUser: (user) => set({ user }),
       
-      updateBalance: (change, moralChange, eventTitle, eventResult, locationName) => {
+      updateBalance: (change, moralChange, eventTitle, eventResult, locationName, eventId) => {
         const { user } = get();
         if (!user) return;
         
@@ -132,13 +134,19 @@ export const useGameStore = create<GameState>()(
           locationName
         };
         
+        // 更新最近事件ID列表，最多保留100个用于去重
+        const newRecentEventIds = eventId !== undefined
+          ? [...user.recentEventIds, eventId].slice(-100)
+          : user.recentEventIds;
+        
         set({
           user: {
             ...user,
             balance: newBalance,
             totalBalance: user.totalBalance + Math.abs(change),
             moralValue: newMoralValue,
-            dailyRecords: [...user.dailyRecords, dailyRecord]
+            dailyRecords: [...user.dailyRecords, dailyRecord],
+            recentEventIds: newRecentEventIds
           },
           gameStatus: newBalance <= 0 ? 'GAME_OVER' : 'PLAYING'
         });

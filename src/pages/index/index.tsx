@@ -476,9 +476,10 @@ const IndexPage = () => {
     setShowLocationPicker(false);
     setCurrentEventResult(null); // 重置结果
     
-    // 根据道德值获取随机事件
+    // 根据道德值获取随机事件，排除最近触发的事件
     const moralValue = user?.moralValue || 0;
-    const event = getWeightedRandomEventByMoral(moralValue);
+    const recentEventIds = user?.recentEventIds || [];
+    const event = getWeightedRandomEventByMoral(moralValue, recentEventIds);
     setCurrentEvent(event);
     
     // 立即显示事件弹窗，让用户选择
@@ -595,8 +596,8 @@ const IndexPage = () => {
     const newBalance = user.balance + moneyChange;
     const moralChange = option.moralValue;
     
-    // 更新余额和道德值
-    updateBalance(moneyChange, moralChange, currentEvent?.title || '', option.description, currentLocation?.name);
+    // 更新余额和道德值，同时记录事件ID用于去重
+    updateBalance(moneyChange, moralChange, currentEvent?.title || '', option.description, currentLocation?.name, currentEvent?.id);
     setLastChange(moneyChange);
     
     // 同步到后端

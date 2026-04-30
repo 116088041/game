@@ -230,9 +230,10 @@ export const gameEvents: GameEvent[] = [
   ...generateEventVariants(specialExpenseEvents, 400),  // 特殊支出 30个 × 400
 ];
 
-// 根据道德值调整事件权重
+// 根据道德值调整事件权重，同时排除最近触发的事件
 // moralValue: 道德值，范围 -100 到 +100
-export const getWeightedRandomEventByMoral = (moralValue: number = 0): GameEvent => {
+// recentEventIds: 最近触发的事件ID列表（最多100个），这些事件会被排除
+export const getWeightedRandomEventByMoral = (moralValue: number = 0, recentEventIds: string[] = []): GameEvent => {
   // 道德值影响事件类型权重
   // 道德值高 -> 更多好事件（work, opportunity）
   // 道德值低 -> 更多坏事件（risk, consumption）
@@ -247,25 +248,34 @@ export const getWeightedRandomEventByMoral = (moralValue: number = 0): GameEvent
   
   const roll = Math.random();
   
+  // 过滤掉最近触发的事件
+  const excludeIds = new Set(recentEventIds);
+  
   if (roll < storyWeight) {
     // 5% 超级搞笑故事事件
-    const storyEvents = gameEvents.filter(e => e.id.startsWith('s'));
+    const storyEvents = gameEvents.filter(e => e.id.startsWith('s') && !excludeIds.has(e.id));
+    if (storyEvents.length === 0) {
+      // 如果都被排除了，返回任意搞笑故事事件
+      const allStoryEvents = gameEvents.filter(e => e.id.startsWith('s'));
+      return allStoryEvents[Math.floor(Math.random() * allStoryEvents.length)];
+    }
     return storyEvents[Math.floor(Math.random() * storyEvents.length)];
   } else if (roll < storyWeight + goodEventWeight) {
     // 好事件：work, opportunity（根据道德值调整5%-25%）
-    const goodEvents = gameEvents.filter(e => e.type === 'work' || e.type === 'opportunity');
+    const goodEvents = gameEvents.filter(e => (e.type === 'work' || e.type === 'opportunity') && !excludeIds.has(e.id));
     if (goodEvents.length === 0) {
-      // 如果没有好事件，返回risk事件
+      // 如果都被排除了，返回risk事件
       const riskEvents = gameEvents.filter(e => e.type === 'risk');
       return riskEvents[Math.floor(Math.random() * riskEvents.length)];
     }
     return goodEvents[Math.floor(Math.random() * goodEvents.length)];
   } else {
     // 风险事件：固定80%
-    const riskEvents = gameEvents.filter(e => e.type === 'risk');
+    const riskEvents = gameEvents.filter(e => e.type === 'risk' && !excludeIds.has(e.id));
     if (riskEvents.length === 0) {
-      // 如果没有risk事件，返回任意事件
-      return gameEvents[Math.floor(Math.random() * gameEvents.length)];
+      // 如果都被排除了，返回任意risk事件
+      const allRiskEvents = gameEvents.filter(e => e.type === 'risk');
+      return allRiskEvents[Math.floor(Math.random() * allRiskEvents.length)];
     }
     return riskEvents[Math.floor(Math.random() * riskEvents.length)];
   }
