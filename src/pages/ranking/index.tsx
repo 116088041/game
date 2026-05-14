@@ -35,10 +35,11 @@ export default function Ranking() {
   const user = useGameStore((state) => state.user);
 
   useEffect(() => {
+    if (!user) return;
     syncUserToServer();
     fetchExpenseRankings();
     fetchIncomeRankings();
-  }, []);
+  }, [user]);
 
   const syncUserToServer = async () => {
     if (!user) return;
