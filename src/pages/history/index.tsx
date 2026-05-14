@@ -11,8 +11,8 @@ interface HistoryRecord {
   eventTitle: string;
   eventResult: string;
   moneyChange: number;
-  moralChange: number;
-  moralValue: number;
+  karmaChange: number;
+  karmaValue: number;
   balance: number;
   locationName: string;
   createdAt: string;
@@ -166,9 +166,9 @@ export default function History() {
               </View>
               <View className="mt-3 pt-3 border-t border-gray-100 flex justify-between text-sm text-gray-500">
                 <View className="flex items-center gap-1">
-                  <Heart size={14} color={user.moralValue >= 0 ? '#10b981' : '#ef4444'} />
-                  <Text className={user.moralValue >= 0 ? 'text-green-600' : 'text-red-500'}>
-                    道德值：{user.moralValue >= 0 ? '+' : ''}{user.moralValue}
+                  <Heart size={14} color={user.karmaValue >= 0 ? '#10b981' : '#ef4444'} />
+                  <Text className={user.karmaValue >= 0 ? 'text-green-600' : 'text-red-500'}>
+                    功德值：{user.karmaValue >= 0 ? '+' : ''}{user.karmaValue}
                   </Text>
                 </View>
                 <Text>当前财富：¥{user.balance.toLocaleString()}</Text>
@@ -265,11 +265,11 @@ export default function History() {
                                     >
                                       金额变化: {record.moneyChange >= 0 ? '+' : ''}{record.moneyChange}元
                                     </Text>
-                                    {record.moralChange !== undefined && record.moralChange !== 0 && (
+                                    {record.karmaChange !== undefined && record.karmaChange !== 0 && (
                                       <View className="flex items-center gap-1 mt-1">
-                                        <Heart size={12} color={record.moralChange >= 0 ? '#10b981' : '#ef4444'} />
-                                        <Text className={`text-xs ${record.moralChange >= 0 ? 'text-green-600' : 'text-red-500'}`}>
-                                          道德值: {record.moralChange >= 0 ? '+' : ''}{record.moralChange}
+                                        <Heart size={12} color={record.karmaChange >= 0 ? '#10b981' : '#ef4444'} />
+                                        <Text className={`text-xs ${record.karmaChange >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+                                          功德值: {record.karmaChange >= 0 ? '+' : ''}{record.karmaChange}
                                         </Text>
                                       </View>
                                     )}

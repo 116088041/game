@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 
-// 用户数据接口
 export interface UserRecord {
   userId: string;
   nickname: string;
@@ -8,26 +7,30 @@ export interface UserRecord {
   cityName: string;
   provinceCode: string;
   provinceName: string;
+  district: string;
+  districtType: string;
   balance: number;
-  totalIncome: number;   // 总收入
-  totalExpense: number;  // 总支出
+  totalIncome: number;
+  totalExpense: number;
+  karmaValue: number;
   day: number;
+  lastSettlementDate: string;
   updatedAt: Date;
 }
 
-// 每日记录接口
 export interface DailyRecord {
   userId: string;
   day: number;
   eventTitle: string;
   eventResult: string;
   moneyChange: number;
+  karmaChange: number;
+  karmaValue: number;
   balance: number;
   locationName?: string;
   createdAt: Date;
 }
 
-// 排名信息接口
 export interface RankingInfo {
   cityRank: number;
   cityTotal: number;
@@ -38,25 +41,17 @@ export interface RankingInfo {
   nationalRank: number;
   nationalTotal: number;
   nationalRichest: { nickname: string; balance: number } | null;
-  // 花钱排行榜
   expenseRank: number;
   expenseTotal: number;
-  topSpender: { nickname: string; totalExpense: number } | null;
-  // 赚钱排行榜
   incomeRank: number;
   incomeTotal: number;
-  topEarner: { nickname: string; totalIncome: number } | null;
 }
 
 @Injectable()
 export class GameService {
-  // 模拟数据库 - 用户记录
   private users: Map<string, UserRecord> = new Map();
-  
-  // 模拟数据库 - 每日记录
   private dailyRecords: DailyRecord[] = [];
 
-  // 创建或更新用户
   async createOrUpdateUser(data: {
     userId: string;
     nickname: string;
@@ -64,13 +59,14 @@ export class GameService {
     cityName: string;
     provinceCode: string;
     provinceName: string;
+    district?: string;
+    districtType?: string;
     balance: number;
+    karmaValue?: number;
     totalIncome?: number;
     totalExpense?: number;
     day: number;
   }): Promise<UserRecord> {
-    const existingUser = this.users.get(data.userId);
-    
     const userRecord: UserRecord = {
       userId: data.userId,
       nickname: data.nickname,
@@ -78,10 +74,14 @@ export class GameService {
       cityName: data.cityName,
       provinceCode: data.provinceCode,
       provinceName: data.provinceName,
+      district: data.district || '',
+      districtType: data.districtType || '',
       balance: data.balance,
       totalIncome: data.totalIncome || 0,
       totalExpense: data.totalExpense || 0,
+      karmaValue: data.karmaValue ?? 50,
       day: data.day,
+      lastSettlementDate: new Date().toISOString().split('T')[0],
       updatedAt: new Date(),
     };
 
@@ -89,13 +89,14 @@ export class GameService {
     return userRecord;
   }
 
-  // 记录每日事件
   async recordDailyEvent(data: {
     userId: string;
     day?: number;
     eventTitle: string;
     eventResult: string;
     moneyChange: number;
+    karmaChange?: number;
+    karmaValue?: number;
     balance: number;
     locationName?: string;
   }): Promise<DailyRecord> {
@@ -105,6 +106,8 @@ export class GameService {
       eventTitle: data.eventTitle,
       eventResult: data.eventResult,
       moneyChange: data.moneyChange,
+      karmaChange: data.karmaChange || 0,
+      karmaValue: data.karmaValue ?? 50,
       balance: data.balance,
       locationName: data.locationName,
       createdAt: new Date(),
@@ -112,247 +115,166 @@ export class GameService {
 
     this.dailyRecords.push(record);
 
-    // 更新用户的totalIncome和totalExpense
     let user = this.users.get(data.userId);
     if (!user) {
-      // 如果用户不存在，创建一个默认用户记录
       user = {
         userId: data.userId,
         nickname: `玩家${data.userId.slice(0, 6)}`,
         cityCode: '',
-        cityName: data.locationName || '未知城市',
+        cityName: data.locationName || '',
         provinceCode: '',
-        provinceName: '未知省份',
+        provinceName: '',
+        district: '',
+        districtType: '',
         balance: data.balance,
         totalIncome: 0,
         totalExpense: 0,
+        karmaValue: data.karmaValue ?? 50,
         day: data.day || 1,
+        lastSettlementDate: new Date().toISOString().split('T')[0],
         updatedAt: new Date(),
       };
       this.users.set(data.userId, user);
     }
-    
-    // 更新收入和支出
+
     if (data.moneyChange > 0) {
-      user.totalIncome = (user.totalIncome || 0) + data.moneyChange;
+      user.totalIncome += data.moneyChange;
     } else if (data.moneyChange < 0) {
-      user.totalExpense = (user.totalExpense || 0) + Math.abs(data.moneyChange);
+      user.totalExpense += Math.abs(data.moneyChange);
     }
     user.balance = data.balance;
+    if (data.karmaValue !== undefined) user.karmaValue = data.karmaValue;
     user.day = data.day || user.day;
 
     return record;
   }
 
-  // 获取用户排名
   async getUserRanking(userId: string, cityCode: string, provinceCode: string): Promise<RankingInfo> {
-    // 获取所有用户
     const allUsers = Array.from(this.users.values());
-    
-    // 按城市排名
+
     const cityUsers = allUsers.filter(u => u.cityCode === cityCode)
       .sort((a, b) => b.balance - a.balance);
     const cityRank = cityUsers.findIndex(u => u.userId === userId) + 1;
     const cityRichest = cityUsers[0] ? { nickname: cityUsers[0].nickname, balance: cityUsers[0].balance } : null;
 
-    // 按省份排名
     const provinceUsers = allUsers.filter(u => u.provinceCode === provinceCode)
       .sort((a, b) => b.balance - a.balance);
     const provinceRank = provinceUsers.findIndex(u => u.userId === userId) + 1;
     const provinceRichest = provinceUsers[0] ? { nickname: provinceUsers[0].nickname, balance: provinceUsers[0].balance } : null;
 
-    // 按全国排名
     const nationalUsers = allUsers.sort((a, b) => b.balance - a.balance);
     const nationalRank = nationalUsers.findIndex(u => u.userId === userId) + 1;
     const nationalRichest = nationalUsers[0] ? { nickname: nationalUsers[0].nickname, balance: nationalUsers[0].balance } : null;
 
+    // expense ranking
+    const expenseSorted = allUsers.filter(u => u.totalExpense > 0).sort((a, b) => b.totalExpense - a.totalExpense);
+    const expenseRank = expenseSorted.findIndex(u => u.userId === userId) + 1;
+
+    // income ranking
+    const incomeSorted = allUsers.filter(u => u.totalIncome > 0).sort((a, b) => b.totalIncome - a.totalIncome);
+    const incomeRank = incomeSorted.findIndex(u => u.userId === userId) + 1;
+
     return {
-      cityRank: cityRank || 1,
-      cityTotal: cityUsers.length || 1,
-      cityRichest,
-      provinceRank: provinceRank || 1,
-      provinceTotal: provinceUsers.length || 1,
-      provinceRichest,
-      nationalRank: nationalRank || 1,
-      nationalTotal: nationalUsers.length || 1,
-      nationalRichest,
-      // 花钱排行榜
-      expenseRank: 0,
-      expenseTotal: 0,
-      topSpender: null,
-      // 赚钱排行榜
-      incomeRank: 0,
-      incomeTotal: 0,
-      topEarner: null,
+      cityRank: cityRank || 1, cityTotal: cityUsers.length || 1, cityRichest,
+      provinceRank: provinceRank || 1, provinceTotal: provinceUsers.length || 1, provinceRichest,
+      nationalRank: nationalRank || 1, nationalTotal: nationalUsers.length || 1, nationalRichest,
+      expenseRank: expenseRank || expenseSorted.length + 1, expenseTotal: expenseSorted.length,
+      incomeRank: incomeRank || incomeSorted.length + 1, incomeTotal: incomeSorted.length,
     };
   }
 
-  // 获取用户信息
   async getUser(userId: string): Promise<UserRecord | null> {
     return this.users.get(userId) || null;
   }
 
-  // 获取用户所有记录
   async getUserRecords(userId: string): Promise<DailyRecord[]> {
     return this.dailyRecords.filter(r => r.userId === userId);
   }
 
-  // 获取所有城市排行榜
-  async getCityRankings(cityCode: string): Promise<any[]> {
+  async getRichestRankings(cityCode?: string, provinceCode?: string) {
     const allUsers = Array.from(this.users.values());
-    const cityUsers = allUsers
-      .filter(u => u.cityCode === cityCode)
-      .sort((a, b) => b.balance - a.balance)
-      .slice(0, 100);
 
-    return cityUsers.map((u, index) => ({
-      userId: u.userId,
-      nickname: u.nickname,
-      balance: u.balance,
-      day: u.day,
-      city: u.cityName,
-      province: u.provinceName,
-      rank: index + 1,
-      rankType: 'city' as const,
-    }));
+    const cityUsers = cityCode
+      ? allUsers.filter(u => u.cityCode === cityCode).sort((a, b) => b.balance - a.balance).slice(0, 100)
+      : [];
+    const provinceUsers = provinceCode
+      ? allUsers.filter(u => u.provinceCode === provinceCode).sort((a, b) => b.balance - a.balance).slice(0, 100)
+      : [];
+    const nationalUsers = allUsers.sort((a, b) => b.balance - a.balance).slice(0, 100);
+
+    const fmt = (u: UserRecord, i: number, type: string) => ({
+      userId: u.userId, nickname: u.nickname, balance: u.balance,
+      day: u.day, city: u.cityName, province: u.provinceName,
+      totalIncome: u.totalIncome, totalExpense: u.totalExpense,
+      karmaValue: u.karmaValue, rank: i + 1, rankType: type,
+    });
+
+    return {
+      city: cityUsers.map((u, i) => fmt(u, i, 'city')),
+      province: provinceUsers.map((u, i) => fmt(u, i, 'province')),
+      national: nationalUsers.map((u, i) => fmt(u, i, 'national')),
+    };
   }
 
-  // 获取所有省份排行榜
-  async getProvinceRankings(provinceCode: string): Promise<any[]> {
-    const allUsers = Array.from(this.users.values());
-    const provinceUsers = allUsers
-      .filter(u => u.provinceCode === provinceCode)
-      .sort((a, b) => b.balance - a.balance)
-      .slice(0, 100);
-
-    return provinceUsers.map((u, index) => ({
-      userId: u.userId,
-      nickname: u.nickname,
-      balance: u.balance,
-      day: u.day,
-      city: u.cityName,
-      province: u.provinceName,
-      rank: index + 1,
-      rankType: 'province' as const,
-    }));
-  }
-
-  // 获取全国排行榜
-  async getNationalRankings(): Promise<any[]> {
-    const allUsers = Array.from(this.users.values());
-    const sortedUsers = allUsers
-      .sort((a, b) => b.balance - a.balance)
-      .slice(0, 100);
-
-    return sortedUsers.map((u, index) => ({
-      userId: u.userId,
-      nickname: u.nickname,
-      balance: u.balance,
-      day: u.day,
-      city: u.cityName,
-      province: u.provinceName,
-      rank: index + 1,
-      rankType: 'national' as const,
-    }));
-  }
-
-  // 汇总所有排行榜数据
-  async summaryAllRankings(): Promise<{
-    totalUsers: number;
-    totalMoney: number;
-    avgBalance: number;
-    richestUser: { nickname: string; balance: number } | null;
-    cityCount: number;
-    provinceCount: number;
-  }> {
+  async summaryAllRankings() {
     const allUsers = Array.from(this.users.values());
     const totalUsers = allUsers.length;
     const totalMoney = allUsers.reduce((sum, u) => sum + u.balance, 0);
     const avgBalance = totalUsers > 0 ? Math.round(totalMoney / totalUsers) : 0;
-    
-    // 找出最富有的用户
+
     const sortedUsers = allUsers.sort((a, b) => b.balance - a.balance);
-    const richestUser = sortedUsers.length > 0 
+    const richestUser = sortedUsers.length > 0
       ? { nickname: sortedUsers[0].nickname, balance: sortedUsers[0].balance }
       : null;
-    
-    // 统计城市和省份数量
+
     const citySet = new Set(allUsers.map(u => u.cityCode));
     const provinceSet = new Set(allUsers.map(u => u.provinceCode));
 
-    return {
-      totalUsers,
-      totalMoney,
-      avgBalance,
-      richestUser,
-      cityCount: citySet.size,
-      provinceCount: provinceSet.size,
-    };
+    return { totalUsers, totalMoney, avgBalance, richestUser, cityCount: citySet.size, provinceCount: provinceSet.size };
   }
 
-  // 获取花钱排行榜（按总支出排序）
-  async getExpenseRankings(limit: number = 100): Promise<any[]> {
+  async getExpenseRankings(limit: number = 100) {
     const allUsers = Array.from(this.users.values());
-    const sortedUsers = allUsers
+    return allUsers
       .filter(u => u.totalExpense > 0)
       .sort((a, b) => b.totalExpense - a.totalExpense)
-      .slice(0, limit);
-
-    return sortedUsers.map((u, index) => ({
-      userId: u.userId,
-      nickname: u.nickname,
-      totalExpense: u.totalExpense,
-      currentBalance: u.balance,
-      day: u.day,
-      city: u.cityName,
-      province: u.provinceName,
-      rank: index + 1,
-    }));
+      .slice(0, limit)
+      .map((u, i) => ({
+        userId: u.userId, nickname: u.nickname, totalExpense: u.totalExpense,
+        currentBalance: u.balance, day: u.day, city: u.cityName, province: u.provinceName, rank: i + 1,
+      }));
   }
 
-  // 获取赚钱排行榜（按总收入排序）
-  async getIncomeRankings(limit: number = 100): Promise<any[]> {
+  async getIncomeRankings(limit: number = 100) {
     const allUsers = Array.from(this.users.values());
-    const sortedUsers = allUsers
+    return allUsers
       .filter(u => u.totalIncome > 0)
       .sort((a, b) => b.totalIncome - a.totalIncome)
-      .slice(0, limit);
-
-    return sortedUsers.map((u, index) => ({
-      userId: u.userId,
-      nickname: u.nickname,
-      totalIncome: u.totalIncome,
-      currentBalance: u.balance,
-      day: u.day,
-      city: u.cityName,
-      province: u.provinceName,
-      rank: index + 1,
-    }));
+      .slice(0, limit)
+      .map((u, i) => ({
+        userId: u.userId, nickname: u.nickname, totalIncome: u.totalIncome,
+        currentBalance: u.balance, day: u.day, city: u.cityName, province: u.provinceName, rank: i + 1,
+      }));
   }
 
-  // 获取用户在花钱排行榜的排名
-  async getUserExpenseRank(userId: string): Promise<{ rank: number; total: number }> {
+  async getUserExpenseRank(userId: string) {
     const allUsers = Array.from(this.users.values());
-    const filteredUsers = allUsers.filter(u => u.totalExpense > 0);
-    const sortedUsers = filteredUsers.sort((a, b) => b.totalExpense - a.totalExpense);
-    const userIndex = sortedUsers.findIndex(u => u.userId === userId);
-    
-    return {
-      rank: userIndex >= 0 ? userIndex + 1 : sortedUsers.length + 1,
-      total: sortedUsers.length,
-    };
+    const sorted = allUsers.filter(u => u.totalExpense > 0).sort((a, b) => b.totalExpense - a.totalExpense);
+    const idx = sorted.findIndex(u => u.userId === userId);
+    return { rank: idx >= 0 ? idx + 1 : sorted.length + 1, total: sorted.length };
   }
 
-  // 获取用户在赚钱排行榜的排名
-  async getUserIncomeRank(userId: string): Promise<{ rank: number; total: number }> {
+  async getUserIncomeRank(userId: string) {
     const allUsers = Array.from(this.users.values());
-    const filteredUsers = allUsers.filter(u => u.totalIncome > 0);
-    const sortedUsers = filteredUsers.sort((a, b) => b.totalIncome - a.totalIncome);
-    const userIndex = sortedUsers.findIndex(u => u.userId === userId);
-    
-    return {
-      rank: userIndex >= 0 ? userIndex + 1 : sortedUsers.length + 1,
-      total: sortedUsers.length,
-    };
+    const sorted = allUsers.filter(u => u.totalIncome > 0).sort((a, b) => b.totalIncome - a.totalIncome);
+    const idx = sorted.findIndex(u => u.userId === userId);
+    return { rank: idx >= 0 ? idx + 1 : sorted.length + 1, total: sorted.length };
+  }
+
+  async settleUser(userId: string) {
+    const user = this.users.get(userId);
+    if (!user) return null;
+    user.lastSettlementDate = new Date().toISOString().split('T')[0];
+    return { date: user.lastSettlementDate, balance: user.balance, karmaValue: user.karmaValue };
   }
 }

@@ -1,46 +1,45 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, type PersistStorage } from 'zustand/middleware';
+import Taro from '@tarojs/taro';
 
-// 游戏状态枚举
-export type GameStatus = 'INIT' | 'PLAYING' | 'EVENT' | 'RANKING' | 'GAME_OVER';
+export type GameStatus = 'INIT' | 'PLAYING' | 'EVENT' | 'GAME_OVER';
 
-// 用户选择的地点
 export interface Location {
   province: string;
   provinceCode: string;
   city: string;
   cityCode: string;
+  district: string;
+  districtType: string;
 }
 
-// 每日记录
 export interface DailyRecord {
   date: string;
   moneyChange: number;
   balance: number;
-  moralChange: number; // 道德值变化
-  moralValue: number;  // 当天道德值
+  karmaChange: number;
+  karmaValue: number;
   eventTitle: string;
   eventResult: string;
   locationName?: string;
 }
 
-// 用户数据
 export interface UserData {
   id: string;
   nickname: string;
   location: Location;
   balance: number;
-  totalBalance: number;
-  totalIncome: number;   // 总收入
-  totalExpense: number;  // 总支出
-  moralValue: number; // 道德值：-100 到 100
+  totalIncome: number;
+  totalExpense: number;
+  karmaValue: number;
   startDate: string;
   dailyRecords: DailyRecord[];
-  recentEventIds: string[]; // 最近100次触发的事件ID，用于去重
+  recentEventIds: string[];
+  lastSettlementDate: string;
 }
 
-// 排名信息
 export interface RankingInfo {
+  // 首富排行
   cityRank: number;
   cityTotal: number;
   cityRichest: { nickname: string; balance: number } | null;
@@ -50,46 +49,44 @@ export interface RankingInfo {
   nationalRank: number;
   nationalTotal: number;
   nationalRichest: { nickname: string; balance: number } | null;
+  // 败家子排行
+  expenseRank: number;
+  expenseTotal: number;
+  incomeRank: number;
+  incomeTotal: number;
 }
 
-// 游戏状态接口
 interface GameState {
-  // 用户数据
   user: UserData | null;
-  
-  // 当前游戏状态
   gameStatus: GameStatus;
-  
-  // 排名信息
   ranking: RankingInfo | null;
-  
-  // 当前事件
   currentEvent: any | null;
-  
-  // 操作状态
   isLoading: boolean;
   message: string | null;
-  
-  // 动作
+
   setUser: (user: UserData | null) => void;
-  updateBalance: (change: number, moralChange: number, eventTitle: string, eventResult: string, locationName?: string, eventId?: string) => void;
+  updateBalance: (
+    change: number,
+    karmaChange: number,
+    eventTitle: string,
+    eventResult: string,
+    locationName?: string,
+    eventId?: string
+  ) => void;
   setGameStatus: (status: GameStatus) => void;
   setCurrentEvent: (event: any | null) => void;
   setRanking: (ranking: RankingInfo | null) => void;
   setLoading: (loading: boolean) => void;
   setMessage: (message: string | null) => void;
   resetGame: () => void;
-  
-  // 从后端同步用户数据
   syncUserData: (userData: Partial<UserData>) => void;
+  setLastSettlementDate: (date: string) => void;
 }
 
-// 生成唯一ID
 const generateId = () => {
   return Date.now().toString(36) + Math.random().toString(36).substr(2);
 };
 
-// 初始用户数据
 const createInitialUser = (nickname: string, location: Location): UserData => {
   const now = new Date();
   return {
@@ -97,14 +94,33 @@ const createInitialUser = (nickname: string, location: Location): UserData => {
     nickname,
     location,
     balance: 100,
-    totalBalance: 100,
-    moralValue: 50, // 初始道德值为50
+    karmaValue: 50,
     startDate: now.toISOString().split('T')[0],
     dailyRecords: [],
-    recentEventIds: [], // 初始为空数组
+    recentEventIds: [],
     totalIncome: 0,
-    totalExpense: 0
+    totalExpense: 0,
+    lastSettlementDate: now.toISOString().split('T')[0],
   };
+};
+
+// Taro 小程序存储适配器
+const taroStorage: PersistStorage<any> = {
+  getItem: (name) => {
+    const value = Taro.getStorageSync(name);
+    if (value === undefined || value === null || value === '') return null;
+    try {
+      return JSON.parse(value);
+    } catch {
+      return null;
+    }
+  },
+  setItem: (name, value) => {
+    Taro.setStorageSync(name, JSON.stringify(value));
+  },
+  removeItem: (name) => {
+    Taro.removeStorageSync(name);
+  },
 };
 
 export const useGameStore = create<GameState>()(
@@ -116,83 +132,89 @@ export const useGameStore = create<GameState>()(
       currentEvent: null,
       isLoading: false,
       message: null,
-      
+
       setUser: (user) => set({ user }),
-      
-      updateBalance: (change, moralChange, eventTitle, eventResult, locationName, eventId) => {
+
+      updateBalance: (change, karmaChange, eventTitle, eventResult, locationName, eventId) => {
         const { user } = get();
         if (!user) return;
-        
+
         const newBalance = user.balance + change;
-        const newMoralValue = Math.max(-100, Math.min(100, user.moralValue + moralChange));
+        const newKarma = Math.max(-100, Math.min(100, user.karmaValue + karmaChange));
         const today = new Date().toISOString().split('T')[0];
-        
-        const dailyRecord: DailyRecord = {
+
+        const record: DailyRecord = {
           date: today,
           moneyChange: change,
           balance: newBalance,
-          moralChange,
-          moralValue: newMoralValue,
+          karmaChange,
+          karmaValue: newKarma,
           eventTitle,
           eventResult,
-          locationName
+          locationName,
         };
-        
-        // 更新最近事件ID列表，最多保留100个用于去重
-        const existingRecentIds = user.recentEventIds || [];
-        const newRecentEventIds = eventId !== undefined
-          ? [...existingRecentIds, eventId].slice(-100)
-          : existingRecentIds;
-        
+
+        const existingIds = user.recentEventIds || [];
+        const newRecentIds = eventId !== undefined
+          ? [...existingIds, eventId].slice(-100)
+          : existingIds;
+
         set({
           user: {
             ...user,
             balance: newBalance,
-            totalBalance: user.totalBalance + Math.abs(change),
-            moralValue: newMoralValue,
-            dailyRecords: [...user.dailyRecords, dailyRecord],
-            recentEventIds: newRecentEventIds
+            karmaValue: newKarma,
+            dailyRecords: [...user.dailyRecords, record],
+            recentEventIds: newRecentIds,
+            totalIncome: change > 0 ? user.totalIncome + change : user.totalIncome,
+            totalExpense: change < 0 ? user.totalExpense + Math.abs(change) : user.totalExpense,
           },
-          gameStatus: newBalance <= 0 ? 'GAME_OVER' : 'PLAYING'
+          gameStatus: newBalance <= 0 ? 'GAME_OVER' : 'PLAYING',
         });
       },
-      
+
       setGameStatus: (status) => set({ gameStatus: status }),
-      
+
       setCurrentEvent: (event) => set({ currentEvent: event }),
-      
+
       setRanking: (ranking) => set({ ranking }),
-      
+
       setLoading: (loading) => set({ isLoading: loading }),
-      
+
       setMessage: (message) => set({ message }),
-      
+
+      setLastSettlementDate: (date) => {
+        const { user } = get();
+        if (!user) return;
+        set({ user: { ...user, lastSettlementDate: date } });
+      },
+
       resetGame: () => set({
         user: null,
         gameStatus: 'INIT',
         ranking: null,
         currentEvent: null,
         isLoading: false,
-        message: null
+        message: null,
       }),
-      
+
       syncUserData: (userData) => {
         const { user } = get();
         if (!user) return;
         set({ user: { ...user, ...userData } });
-      }
+      },
     }),
     {
-      name: 'game-storage',
+      name: 'game-storage-v2',
+      storage: taroStorage,
       partialize: (state) => ({
         user: state.user,
-        gameStatus: state.gameStatus
-      })
+        gameStatus: state.gameStatus,
+      }),
     }
   )
 );
 
-// 初始化用户
 export const initializeUser = (nickname: string, location: Location) => {
   const user = createInitialUser(nickname, location);
   useGameStore.getState().setUser(user);
