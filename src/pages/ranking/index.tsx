@@ -35,15 +35,43 @@ export default function Ranking() {
   const user = useGameStore((state) => state.user);
 
   useEffect(() => {
+    syncUserToServer();
     fetchExpenseRankings();
     fetchIncomeRankings();
   }, []);
+
+  const syncUserToServer = async () => {
+    if (!user) return;
+    try {
+      await Network.request({
+        url: '/api/game/user',
+        method: 'POST',
+        data: {
+          userId: user.id,
+          nickname: user.nickname,
+          cityCode: user.location.cityCode,
+          cityName: user.location.city,
+          provinceCode: user.location.provinceCode,
+          provinceName: user.location.province,
+          district: user.location.district,
+          districtType: user.location.districtType,
+          balance: user.balance,
+          karmaValue: user.karmaValue,
+          totalIncome: user.totalIncome,
+          totalExpense: user.totalExpense,
+          day: user.dailyRecords.length || 1,
+        },
+      });
+    } catch (e) {
+      // 静默失败
+    }
+  };
 
   const fetchExpenseRankings = async () => {
     setLoading(true);
     try {
       const res = await Network.request({
-        url: '/api/game/rankings/expense',
+        url: `/api/game/rankings/expense?userId=${user?.id || ''}`,
         method: 'GET',
       });
       if (res.data?.code === 0 || res.data?.code === 200) {
@@ -60,7 +88,7 @@ export default function Ranking() {
     setLoading(true);
     try {
       const res = await Network.request({
-        url: '/api/game/rankings/income',
+        url: `/api/game/rankings/income?userId=${user?.id || ''}`,
         method: 'GET',
       });
       if (res.data?.code === 0 || res.data?.code === 200) {
