@@ -167,11 +167,11 @@ export class GameService {
     const nationalRichest = nationalUsers[0] ? { nickname: nationalUsers[0].nickname, balance: nationalUsers[0].balance } : null;
 
     // expense ranking
-    const expenseSorted = allUsers.filter(u => u.totalExpense > 0).sort((a, b) => b.totalExpense - a.totalExpense);
+    const expenseSorted = allUsers.sort((a, b) => b.totalExpense - a.totalExpense);
     const expenseRank = expenseSorted.findIndex(u => u.userId === userId) + 1;
 
     // income ranking
-    const incomeSorted = allUsers.filter(u => u.totalIncome > 0).sort((a, b) => b.totalIncome - a.totalIncome);
+    const incomeSorted = allUsers.sort((a, b) => b.totalIncome - a.totalIncome);
     const incomeRank = incomeSorted.findIndex(u => u.userId === userId) + 1;
 
     return {
@@ -236,7 +236,6 @@ export class GameService {
   async getExpenseRankings(limit: number = 100) {
     const allUsers = Array.from(this.users.values());
     return allUsers
-      .filter(u => u.totalExpense > 0)
       .sort((a, b) => b.totalExpense - a.totalExpense)
       .slice(0, limit)
       .map((u, i) => ({
@@ -248,7 +247,6 @@ export class GameService {
   async getIncomeRankings(limit: number = 100) {
     const allUsers = Array.from(this.users.values());
     return allUsers
-      .filter(u => u.totalIncome > 0)
       .sort((a, b) => b.totalIncome - a.totalIncome)
       .slice(0, limit)
       .map((u, i) => ({
@@ -259,16 +257,16 @@ export class GameService {
 
   async getUserExpenseRank(userId: string) {
     const allUsers = Array.from(this.users.values());
-    const sorted = allUsers.filter(u => u.totalExpense > 0).sort((a, b) => b.totalExpense - a.totalExpense);
+    const sorted = allUsers.sort((a, b) => b.totalExpense - a.totalExpense);
     const idx = sorted.findIndex(u => u.userId === userId);
-    return { rank: idx >= 0 ? idx + 1 : sorted.length + 1, total: sorted.length };
+    return { rank: idx >= 0 ? idx + 1 : sorted.length, total: sorted.length };
   }
 
   async getUserIncomeRank(userId: string) {
     const allUsers = Array.from(this.users.values());
-    const sorted = allUsers.filter(u => u.totalIncome > 0).sort((a, b) => b.totalIncome - a.totalIncome);
+    const sorted = allUsers.sort((a, b) => b.totalIncome - a.totalIncome);
     const idx = sorted.findIndex(u => u.userId === userId);
-    return { rank: idx >= 0 ? idx + 1 : sorted.length + 1, total: sorted.length };
+    return { rank: idx >= 0 ? idx + 1 : sorted.length, total: sorted.length };
   }
 
   async settleUser(userId: string) {

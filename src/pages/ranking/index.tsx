@@ -36,9 +36,11 @@ export default function Ranking() {
 
   useEffect(() => {
     if (!user) return;
-    syncUserToServer();
-    fetchExpenseRankings();
-    fetchIncomeRankings();
+    const loadData = async () => {
+      await syncUserToServer();
+      await Promise.all([fetchExpenseRankings(), fetchIncomeRankings()]);
+    };
+    loadData();
   }, [user]);
 
   const syncUserToServer = async () => {
