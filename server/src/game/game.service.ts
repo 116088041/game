@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
+import * as fs from 'fs';
+import * as path from 'path';
+
+const DATA_FILE = path.resolve(__dirname, '../../data/game-data.json');
 
 export interface UserRecord {
   userId: string;
@@ -48,9 +52,41 @@ export interface RankingInfo {
 }
 
 @Injectable()
-export class GameService {
+export class GameService implements OnModuleInit {
   private users: Map<string, UserRecord> = new Map();
   private dailyRecords: DailyRecord[] = [];
+
+  onModuleInit() {
+    this.loadFromDisk();
+  }
+
+  private saveToDisk() {
+    try {
+      const dir = path.dirname(DATA_FILE);
+      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+      const data = {
+        users: Array.from(this.users.entries()),
+        dailyRecords: this.dailyRecords,
+      };
+      fs.writeFileSync(DATA_FILE, JSON.stringify(data));
+    } catch (e) {
+      console.error('Failed to save data:', e);
+    }
+  }
+
+  private loadFromDisk() {
+    try {
+      if (fs.existsSync(DATA_FILE)) {
+        const raw = fs.readFileSync(DATA_FILE, 'utf-8');
+        const data = JSON.parse(raw);
+        this.users = new Map(data.users || []);
+        this.dailyRecords = data.dailyRecords || [];
+        console.log(`Loaded ${this.users.size} users and ${this.dailyRecords.length} records from disk`);
+      }
+    } catch (e) {
+      console.error('Failed to load data:', e);
+    }
+  }
 
   async createOrUpdateUser(data: {
     userId: string;
@@ -86,6 +122,7 @@ export class GameService {
     };
 
     this.users.set(data.userId, userRecord);
+    this.saveToDisk();
     return userRecord;
   }
 
@@ -146,6 +183,7 @@ export class GameService {
     if (data.karmaValue !== undefined) user.karmaValue = data.karmaValue;
     user.day = data.day || user.day;
 
+    this.saveToDisk();
     return record;
   }
 
@@ -273,6 +311,7 @@ export class GameService {
     const user = this.users.get(userId);
     if (!user) return null;
     user.lastSettlementDate = new Date().toISOString().split('T')[0];
+    this.saveToDisk();
     return { date: user.lastSettlementDate, balance: user.balance, karmaValue: user.karmaValue };
   }
 }
