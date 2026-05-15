@@ -169,7 +169,8 @@ export const useGameStore = create<GameState>()(
             totalIncome: change > 0 ? user.totalIncome + change : user.totalIncome,
             totalExpense: change < 0 ? user.totalExpense + Math.abs(change) : user.totalExpense,
           },
-          gameStatus: newBalance <= 0 ? 'GAME_OVER' : get().gameStatus,
+          // 不在 updateBalance 中直接设置 GAME_OVER，让组件在事件关闭时检查
+          gameStatus: get().gameStatus,
         });
       },
 

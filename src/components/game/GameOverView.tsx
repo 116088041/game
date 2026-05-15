@@ -12,43 +12,43 @@ interface GameOverViewProps {
 
 export const GameOverView = ({ daysSurvived, totalIncome, totalExpense, onRestart }: GameOverViewProps) => {
   return (
-    <View className="flex flex-col items-center justify-center min-h-screen px-4 bg-red-50">
-      <Skull size={80} color="#ef4444" />
-      <Text className="text-3xl font-bold text-red-600 mt-4">身无分文！</Text>
-      <Text className="text-base text-gray-500 mt-2">你已经破产了...</Text>
+    <View className="flex flex-col items-center justify-center min-h-screen px-4 bg-gradient-to-b from-orange-50 to-amber-50">
+      <Skull size={72} color="#e11d48" />
+      <Text className="text-3xl font-bold text-stone-800 mt-4">身无分文！</Text>
+      <Text className="text-base text-stone-400 mt-2">你已经破产了...</Text>
 
-      <Card className="w-full mt-8">
+      <Card className="w-full mt-8 shadow-sm border border-orange-100">
         <CardHeader>
-          <CardTitle className="text-center">游戏结算</CardTitle>
+          <CardTitle className="text-center text-stone-800">游戏结算</CardTitle>
         </CardHeader>
         <CardContent>
           <View className="space-y-3">
             <View className="flex justify-between items-center">
-              <Text className="text-gray-500">存活天数</Text>
-              <Text className="text-lg font-bold">{daysSurvived} 天</Text>
+              <Text className="text-stone-400">存活天数</Text>
+              <Text className="text-lg font-bold text-stone-800">{daysSurvived} 天</Text>
             </View>
             <View className="flex justify-between items-center">
-              <Text className="text-gray-500">总收入</Text>
-              <Text className="text-lg font-bold text-green-500">+¥{totalIncome}</Text>
+              <Text className="text-stone-400">总收入</Text>
+              <Text className="text-lg font-bold text-emerald-500">+¥{totalIncome}</Text>
             </View>
             <View className="flex justify-between items-center">
               <View className="flex items-center gap-1">
-                <TrendingDown size={14} color="#ef4444" />
-                <Text className="text-gray-500">总支出</Text>
+                <TrendingDown size={14} color="#e11d48" />
+                <Text className="text-stone-400">总支出</Text>
               </View>
-              <Text className="text-lg font-bold text-red-500">-¥{totalExpense}</Text>
+              <Text className="text-lg font-bold text-rose-500">-¥{totalExpense}</Text>
             </View>
           </View>
         </CardContent>
       </Card>
 
       <Button
-        className="w-full mt-6 bg-red-500 hover:bg-red-600 text-white"
+        className="w-full mt-6 bg-orange-500 text-white shadow-lg shadow-orange-200"
         size="lg"
         onClick={onRestart}
       >
         <RotateCcw size={18} color="#fff" />
-        <Text className="ml-2 text-white">重新开始</Text>
+        <Text className="ml-2 text-white font-medium">重新开始</Text>
       </Button>
     </View>
   );

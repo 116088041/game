@@ -135,7 +135,6 @@ function FieldDescription({ className, ...props }: React.ComponentPropsWithoutRe
       data-slot="field-description"
       className={cn(
         "text-muted-foreground text-sm font-normal leading-normal",
-        // "group-has-[[data-orientation=horizontal]]/field:text-balance", // text-balance not supported in Taro
         className
       )}
       {...props}

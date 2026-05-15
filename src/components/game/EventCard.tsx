@@ -100,7 +100,7 @@ export const EventCard = ({ event, locationName, onOptionSelect, onClose }: Even
                 <Button
                   key={idx}
                   variant="outline"
-                  className="w-full justify-start p-3 h-auto border-gray-200 hover:border-amber-300 hover:bg-amber-50"
+                  className="w-full justify-start p-3 h-auto border-stone-200 hover:border-orange-300 hover:bg-orange-50"
                   onClick={() => handleSelect(opt)}
                 >
                   <Text className="text-sm font-semibold text-gray-800">{opt.text}</Text>
@@ -154,7 +154,7 @@ export const EventCard = ({ event, locationName, onOptionSelect, onClose }: Even
 
               {/* 关闭按钮 */}
               <Button
-                className={`w-full h-11 text-white font-bold ${isGoodNews ? 'bg-green-500 hover:bg-green-600' : 'bg-gray-700 hover:bg-gray-800'}`}
+                className={`w-full h-11 text-white font-bold ${isGoodNews ? 'bg-orange-500' : 'bg-stone-700'}`}
                 size="lg"
                 onClick={onClose}
               >

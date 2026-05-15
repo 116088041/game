@@ -25,16 +25,14 @@ export default function History() {
   const user = useGameStore((state) => state.user);
   const gameStatus = useGameStore((state) => state.gameStatus);
 
-  // 加载历史记录
   const loadRecords = useCallback(() => {
-    // 直接从store获取最新的dailyRecords
     const currentUser = useGameStore.getState().user;
     if (!currentUser) {
       setRecords([]);
       setLoading(false);
       return;
     }
-    
+
     const localRecords = currentUser.dailyRecords || [];
     if (localRecords.length > 0) {
       const mappedRecords = localRecords.map((r, i) => ({
@@ -45,7 +43,6 @@ export default function History() {
         locationName: r.locationName || currentUser.location?.city || '未知地点',
         createdAt: r.date || new Date().toISOString(),
       }));
-      // 倒序显示，最新的在前
       setRecords(mappedRecords.reverse());
     } else {
       setRecords([]);
@@ -61,17 +58,15 @@ export default function History() {
   const fetchHistory = async () => {
     const currentUser = useGameStore.getState().user;
     if (!currentUser) return;
-    
+
     setLoading(true);
     try {
       const res = await Network.request({
-        url: '/api/game/history',
+        url: `/api/game/records?userId=${currentUser.id}`,
         method: 'GET',
-        data: { userId: currentUser.id },
       });
-      
+
       if (res.data?.code === 200 && res.data.data?.length > 0) {
-        // 后端数据优先
         setRecords(res.data.data);
       }
     } catch (error) {
@@ -81,7 +76,6 @@ export default function History() {
     }
   };
 
-  // 手动刷新历史记录
   const handleRefresh = () => {
     loadRecords();
     fetchHistory();
@@ -89,10 +83,10 @@ export default function History() {
 
   const getDaySummary = () => {
     if (records.length === 0) return { total: 0, income: 0, expense: 0 };
-    
+
     const income = records.filter(r => r.moneyChange > 0).reduce((sum, r) => sum + r.moneyChange, 0);
     const expense = records.filter(r => r.moneyChange < 0).reduce((sum, r) => sum + r.moneyChange, 0);
-    
+
     return {
       total: income + expense,
       income,
@@ -109,7 +103,6 @@ export default function History() {
     return `${date.getMonth() + 1}/${date.getDate()} ${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`;
   };
 
-  // 按日期分组
   const groupedRecords = records.reduce((acc, record) => {
     const date = record.createdAt?.split('T')[0] || '未知';
     if (!acc[date]) acc[date] = [];
@@ -118,60 +111,53 @@ export default function History() {
   }, {} as Record<string, HistoryRecord[]>);
 
   return (
-    <View className="min-h-screen bg-gradient-to-b from-amber-50 to-orange-50">
+    <View className="min-h-screen bg-gradient-to-b from-orange-50 to-amber-50 flex flex-col">
       {/* 头部 */}
-      <View className="bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-6">
+      <View className="bg-gradient-to-r from-orange-500 to-amber-500 px-4 pt-4 pb-6 flex-shrink-0">
         <View className="flex items-center justify-between">
           <View className="flex items-center gap-2">
             <Clock size={24} color="#fff" />
             <Text className="text-xl font-bold text-white">游戏历史</Text>
           </View>
-          <View 
-            className="p-2 bg-white bg-opacity-20 rounded-full"
+          <View
+            className="p-2 bg-white/20 rounded-full"
             onClick={handleRefresh}
           >
             <RefreshCw size={18} color="#fff" />
           </View>
         </View>
-        <Text className="text-amber-100 text-sm mt-1">记录你的每一次选择</Text>
+        <Text className="text-orange-100 text-sm mt-1">记录你的每一次选择</Text>
       </View>
 
       {/* 统计卡片 */}
       {user && (
-        <View className="px-4 -mt-4">
-          <Card className="bg-white shadow-lg border-amber-200">
+        <View className="px-4 pt-4 flex-shrink-0">
+          <Card className="bg-white shadow-sm border border-orange-100">
             <CardContent className="p-4">
               <View className="flex justify-between text-center">
                 <View className="flex-1">
-                  <Text className="block text-2xl font-bold text-green-600">
-                    +{summary.income}
-                  </Text>
-                  <Text className="block text-xs text-gray-400">总收入</Text>
+                  <Text className="block text-2xl font-bold text-emerald-600">+{summary.income}</Text>
+                  <Text className="block text-xs text-stone-400 mt-0.5">总收入</Text>
                 </View>
-                <View className="flex-1 border-x border-gray-100">
-                  <Text className="block text-2xl font-bold text-red-500">
-                    -{summary.expense}
-                  </Text>
-                  <Text className="block text-xs text-gray-400">总支出</Text>
+                <View className="flex-1 border-x border-orange-50">
+                  <Text className="block text-2xl font-bold text-rose-500">-{summary.expense}</Text>
+                  <Text className="block text-xs text-stone-400 mt-0.5">总支出</Text>
                 </View>
                 <View className="flex-1">
-                  <Text className={`block text-2xl font-bold ${
-                    summary.total >= 0 ? 'text-amber-600' : 'text-red-500'
-                  }`}
-                  >
+                  <Text className={`block text-2xl font-bold ${summary.total >= 0 ? 'text-orange-600' : 'text-rose-500'}`}>
                     {summary.total >= 0 ? '+' : ''}{summary.total}
                   </Text>
-                  <Text className="block text-xs text-gray-400">净收益</Text>
+                  <Text className="block text-xs text-stone-400 mt-0.5">净收益</Text>
                 </View>
               </View>
-              <View className="mt-3 pt-3 border-t border-gray-100 flex justify-between text-sm text-gray-500">
+              <View className="mt-3 pt-3 border-t border-orange-50 flex justify-between text-sm">
                 <View className="flex items-center gap-1">
-                  <Heart size={14} color={user.karmaValue >= 0 ? '#10b981' : '#ef4444'} />
-                  <Text className={user.karmaValue >= 0 ? 'text-green-600' : 'text-red-500'}>
-                    功德值：{user.karmaValue >= 0 ? '+' : ''}{user.karmaValue}
+                  <Heart size={14} color={user.karmaValue >= 0 ? '#10b981' : '#e11d48'} />
+                  <Text className={user.karmaValue >= 0 ? 'text-emerald-600' : 'text-rose-500'}>
+                    功德 {user.karmaValue >= 0 ? '+' : ''}{user.karmaValue}
                   </Text>
                 </View>
-                <Text>当前财富：¥{user.balance.toLocaleString()}</Text>
+                <Text className="text-stone-500">当前 ¥{user.balance.toLocaleString()}</Text>
               </View>
             </CardContent>
           </Card>
@@ -179,96 +165,69 @@ export default function History() {
       )}
 
       {/* 历史记录列表 */}
-      <ScrollView scrollY className="px-4 py-4 pb-24" style={{ height: 'calc(100vh - 320px)' }}>
+      <ScrollView scrollY className="flex-1 px-4 pt-4 pb-16">
         {loading ? (
           <View className="flex items-center justify-center py-12">
-            <Text className="text-gray-400">加载中...</Text>
+            <Text className="text-stone-400">加载中...</Text>
           </View>
         ) : records.length === 0 ? (
           <View className="flex flex-col items-center justify-center py-12">
-            <Text className="text-gray-400 mb-2">暂无历史记录</Text>
-            <Text className="text-sm text-gray-400">开始你的首富之旅吧！</Text>
+            <Text className="text-stone-400 mb-2">暂无历史记录</Text>
+            <Text className="text-sm text-stone-400">开始你的首富之旅吧！</Text>
           </View>
         ) : (
           Object.entries(groupedRecords)
             .sort((a, b) => b[0].localeCompare(a[0]))
             .map(([date, dayRecords]) => (
               <View key={date} className="mb-4">
-                {/* 日期标签 */}
                 <View className="flex items-center gap-2 mb-2">
-                  <Calendar size={14} color="#f59e0b" />
-                  <Text className="text-sm font-medium text-amber-700">{date}</Text>
-                  <View className="flex-1 h-px bg-amber-200"></View>
+                  <Calendar size={14} color="#f97316" />
+                  <Text className="text-sm font-medium text-orange-600">{date}</Text>
+                  <View className="flex-1 h-px bg-orange-100"></View>
                 </View>
 
-                {/* 当天记录 */}
                 {dayRecords.map((record) => (
-                  <Card 
-                    key={record.id} 
-                    className={`mb-2 border-l-4 cursor-pointer transition-all ${
-                      record.moneyChange >= 0 
-                        ? 'border-l-green-500 bg-green-50' 
-                        : 'border-l-red-500 bg-red-50'
-                    } ${expandedId === record.id ? 'shadow-lg' : ''}`}
+                  <Card
+                    key={record.id}
+                    className={`mb-2 border-l-4 overflow-hidden ${record.moneyChange >= 0 ? 'border-l-emerald-500 bg-emerald-50/50' : 'border-l-rose-500 bg-rose-50/50'} ${expandedId === record.id ? 'shadow-md' : 'shadow-sm'}`}
                     onClick={() => setExpandedId(expandedId === record.id ? null : record.id)}
                   >
                     <CardContent className="p-3">
-                      <View className="flex items-start gap-3">
-                        {/* 图标 */}
-                        <View className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                          record.moneyChange >= 0 
-                            ? 'bg-green-100' 
-                            : 'bg-red-100'
-                        }`}
-                        >
+                      <View className="flex items-start gap-3 min-w-0">
+                        <View className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${record.moneyChange >= 0 ? 'bg-emerald-100' : 'bg-rose-100'}`}>
                           {record.moneyChange >= 0 ? (
-                            <TrendingUp size={16} color="#22c55e" />
+                            <TrendingUp size={16} color="#10b981" />
                           ) : (
-                            <TrendingDown size={16} color="#ef4444" />
+                            <TrendingDown size={16} color="#e11d48" />
                           )}
                         </View>
 
-                        {/* 内容 */}
-                        <View className="flex-1">
+                        <View className="flex-1 min-w-0">
                           <View className="flex items-start justify-between">
-                            <View className="flex-1">
-                              <Text className="block text-sm font-medium text-gray-800">
-                                {record.eventTitle}
-                              </Text>
-                              <Text className="block text-xs text-gray-500 mt-1">
-                                {record.eventResult}
-                              </Text>
-                              <View className="flex items-center gap-2 mt-2">
-                                <MapPin size={10} color="#9ca3af" />
-                                <Text className="text-xs text-gray-400">{record.locationName}</Text>
-                                <Clock size={10} color="#9ca3af" className="ml-2" />
-                                <Text className="text-xs text-gray-400">{formatDate(record.createdAt)}</Text>
+                            <View className="flex-1 min-w-0 mr-2">
+                              <Text className="block text-sm font-medium text-stone-800 truncate">{record.eventTitle}</Text>
+                              <Text className="block text-xs text-stone-400 mt-1 line-clamp-2">{record.eventResult}</Text>
+                              <View className="flex items-center gap-2 mt-2 flex-wrap">
+                                <MapPin size={10} color="#a8a29e" />
+                                <Text className="text-xs text-stone-400 truncate">{record.locationName}</Text>
+                                <Clock size={10} color="#a8a29e" />
+                                <Text className="text-xs text-stone-400">{formatDate(record.createdAt)}</Text>
                               </View>
-                              
-                              {/* 展开显示更多信息 */}
+
                               {expandedId === record.id && (
-                                <View className="mt-3 p-3 bg-white bg-opacity-70 rounded-lg border border-gray-200">
-                                  <Text className="block text-xs text-gray-500 mb-2 font-medium">事件详情:</Text>
-                                  <Text className="block text-sm text-gray-700 leading-relaxed">
-                                    {record.eventResult}
-                                  </Text>
-                                  <View className="mt-2 pt-2 border-t border-gray-200">
-                                    <Text className="text-xs text-gray-400">
-                                      发生地点: {record.locationName}
-                                    </Text>
-                                    <Text className="text-xs text-gray-400 mt-1">
-                                      当时余额: ¥{record.balance.toLocaleString()}
-                                    </Text>
-                                    <Text className={`text-sm font-bold mt-2 ${
-                                      record.moneyChange >= 0 ? 'text-green-600' : 'text-red-500'
-                                    }`}
-                                    >
+                                <View className="mt-3 p-3 bg-white/80 rounded-lg border border-orange-100">
+                                  <Text className="block text-xs text-stone-500 mb-2 font-medium">事件详情:</Text>
+                                  <Text className="block text-sm text-stone-700 leading-relaxed">{record.eventResult}</Text>
+                                  <View className="mt-2 pt-2 border-t border-orange-50">
+                                    <Text className="text-xs text-stone-400">发生地点: {record.locationName}</Text>
+                                    <Text className="text-xs text-stone-400 mt-1">当时余额: ¥{record.balance.toLocaleString()}</Text>
+                                    <Text className={`text-sm font-bold mt-2 ${record.moneyChange >= 0 ? 'text-emerald-600' : 'text-rose-500'}`}>
                                       金额变化: {record.moneyChange >= 0 ? '+' : ''}{record.moneyChange}元
                                     </Text>
                                     {record.karmaChange !== undefined && record.karmaChange !== 0 && (
                                       <View className="flex items-center gap-1 mt-1">
-                                        <Heart size={12} color={record.karmaChange >= 0 ? '#10b981' : '#ef4444'} />
-                                        <Text className={`text-xs ${record.karmaChange >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+                                        <Heart size={12} color={record.karmaChange >= 0 ? '#10b981' : '#e11d48'} />
+                                        <Text className={`text-xs ${record.karmaChange >= 0 ? 'text-emerald-600' : 'text-rose-500'}`}>
                                           功德值: {record.karmaChange >= 0 ? '+' : ''}{record.karmaChange}
                                         </Text>
                                       </View>
@@ -277,21 +236,15 @@ export default function History() {
                                 </View>
                               )}
                             </View>
-                            <Text className={`text-lg font-bold ml-2 ${
-                              record.moneyChange >= 0 
-                                ? 'text-green-600' 
-                                : 'text-red-500'
-                            }`}
-                            >
+                            <Text className={`text-lg font-bold flex-shrink-0 ${record.moneyChange >= 0 ? 'text-emerald-600' : 'text-rose-500'}`}>
                               {record.moneyChange >= 0 ? '+' : ''}{record.moneyChange}
                             </Text>
                           </View>
                         </View>
                       </View>
 
-                      {/* 底部信息 - 未展开时显示 */}
                       {expandedId !== record.id && (
-                        <View className="mt-2 pt-2 border-t border-gray-200 flex justify-between text-xs text-gray-400">
+                        <View className="mt-2 pt-2 border-t border-orange-50 flex justify-between text-xs text-stone-400">
                           <Text>点击查看详情</Text>
                           <Text>余额: ¥{record.balance.toLocaleString()}</Text>
                         </View>

@@ -6,13 +6,13 @@ export default defineAppConfig({
   ],
   window: {
     backgroundTextStyle: 'light',
-    navigationBarBackgroundColor: '#f59e0b',
+    navigationBarBackgroundColor: '#f97316',
     navigationBarTitleText: '100块钱做首富',
     navigationBarTextStyle: 'white'
   },
   tabBar: {
     color: '#9ca3af',
-    selectedColor: '#f59e0b',
+    selectedColor: '#f97316',
     backgroundColor: '#ffffff',
     borderStyle: 'black',
     list: [

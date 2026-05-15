@@ -1,4 +1,5 @@
 import { View, Text, ScrollView } from '@tarojs/components';
+import { useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
@@ -22,7 +23,7 @@ const typeLabelMap: Record<string, string> = {
 
 const colorMap: Record<string, { color: string; bg: string }> = {
   district: { color: '#6b7280', bg: 'bg-gray-100' },
-  business: { color: '#f59e0b', bg: 'bg-amber-100' },
+  business: { color: '#f97316', bg: 'bg-orange-100' },
   scenic: { color: '#10b981', bg: 'bg-green-100' },
   street: { color: '#8b5cf6', bg: 'bg-purple-100' },
 };
@@ -35,7 +36,7 @@ interface LocationPickerProps {
 }
 
 export const LocationPicker = ({ open, districts, onSelect, onClose }: LocationPickerProps) => {
-  const picked = pickRandomDistricts(districts, 10);
+  const picked = useMemo(() => pickRandomDistricts(districts, 10), [districts, open]);
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
@@ -52,7 +53,7 @@ export const LocationPicker = ({ open, districts, onSelect, onClose }: LocationP
                 return (
                   <Card
                     key={d.name}
-                    className="active:scale-95 cursor-pointer border-2 border-gray-100 hover:border-amber-300"
+                    className="active:scale-95 cursor-pointer border-2 border-orange-100 hover:border-orange-300"
                     onClick={() => onSelect(d)}
                   >
                     <CardContent className="p-3">

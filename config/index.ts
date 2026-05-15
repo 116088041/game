@@ -96,6 +96,13 @@ export default defineConfig<'vite'>(async (merge, _env) => {
           '',
       ),
       TARO_ENV: JSON.stringify(process.env.TARO_ENV),
+      ENABLE_INNER_HTML: JSON.stringify(false),
+      ENABLE_ADJOINED: JSON.stringify(false),
+      ENABLE_SIZE_APIS: JSON.stringify(false),
+      ENABLE_TEMPLATE_CONTENT: JSON.stringify(false),
+      ENABLE_CLONE_NODE: JSON.stringify(false),
+      ENABLE_CONTAINS: JSON.stringify(false),
+      ENABLE_MUTATION_OBSERVER: JSON.stringify(false),
     },
     copy: {
       patterns: [],
